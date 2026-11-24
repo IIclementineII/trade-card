@@ -104,7 +104,7 @@ summary { cursor: pointer; font-size: 14px; font-weight: 500; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chips button { font: inherit; font-size: 13px; font-family: var(--font-num); background: var(--field); color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; cursor: pointer; }
 .stage { position: sticky; top: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-.stage canvas { width: 100%; height: auto; aspect-ratio: 4 / 5; display: block; border-radius: 10px; border: 1px solid var(--line); background: #fff; max-width: 100%; }
+.stage canvas { width: 100%; height: auto; aspect-ratio: 1080 / 1650; display: block; border-radius: 10px; border: 1px solid var(--line); background: #fff; max-width: 100%; }
 .actions { display: flex; gap: 8px; }
 .actions .btn { flex: 1; }
 .dock { display: none; }
@@ -211,6 +211,22 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
 .stats { gap:8px; }
 .stats span { padding:9px 12px; border-radius:11px; color:#6e7b92; background:#f5f7fb; }
 .stats b { color:#263b69; }
+.opts { display:flex; flex-wrap:wrap; gap:9px; }
+.opts label { display:inline-flex; align-items:center; gap:9px; min-height:42px; padding:9px 13px; border:1px solid #e1e7f1; border-radius:12px; background:linear-gradient(180deg,#fff,#f7f9fd); color:#53617b; font-size:13px; font-weight:650; cursor:pointer; transition:background .16s,border-color .16s,box-shadow .16s,transform .16s; }
+.opts label:hover { border-color:#b7c6f7; background:#f7f9ff; transform:translateY(-1px); }
+.opts input[type=checkbox] { appearance:none; -webkit-appearance:none; width:19px; height:19px; flex:0 0 19px; margin:0; border:1.5px solid #bcc7d8; border-radius:6px; background:#fff; cursor:pointer; position:relative; transition:all .16s; }
+.opts input[type=checkbox]:checked { background:#4265df; border-color:#4265df; box-shadow:0 2px 6px rgba(66,101,223,.24); }
+.opts input[type=checkbox]:checked:after { content:""; position:absolute; left:5px; top:2px; width:5px; height:9px; border:solid #fff; border-width:0 2px 2px 0; transform:rotate(45deg); }
+.opts label:has(input:checked) { color:#304fbd; border-color:#b5c4fa; background:#f0f4ff; }
+.opts input[type=checkbox]:focus-visible { outline:3px solid rgba(84,120,246,.24); outline-offset:2px; }
+.exit-list { display:flex; flex-direction:column; gap:9px; }
+.exit-row { display:grid; grid-template-columns:72px minmax(0,1fr) minmax(0,1fr) auto 34px; gap:8px; align-items:end; padding:10px; border:1px solid #e5eaf2; border-radius:12px; background:#f8faff; }
+.exit-row .f { font-size:11px; }
+.exit-row input { min-width:0; }
+.exit-row .be-label { display:flex; align-items:center; gap:5px; height:42px; white-space:nowrap; font-size:12px; }
+.exit-row .del-exit { height:42px; width:34px; border:1px solid var(--line); background:white; color:var(--muted); border-radius:9px; cursor:pointer; }
+.exit-summary { padding:11px 13px; border-radius:11px; background:#f1f5ff; color:#394d7b; font-size:13px; line-height:1.7; }
+@media(max-width:560px) { .exit-row { grid-template-columns:64px 1fr 1fr 30px; } .exit-row .be-label { grid-column:2/4; height:auto; } }
 .hi { padding:15px 0; border-color:#edf0f5; }
 .hi img { border-radius:10px; }
 .hi .ops button { border-radius:9px; border-color:#e1e7f0; background:#f8faff; }
@@ -271,6 +287,10 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
           <button type="button" data-v="be">保本</button>
         </div>
         <label class="f">结果说明（可空）<input type="text" id="resultText" placeholder="例如 +3.2% / TP1 平七成"></label>
+        <div id="exitList" class="exit-list"></div>
+        <div class="btns"><button type="button" class="btn ghost small" id="btnAddExit">+ 添加分批平仓</button></div>
+        <div class="row"><label class="f">手续费率（每边 %，可空）<input type="text" id="feeRate" inputmode="decimal" placeholder="例如 0.05"></label></div>
+        <div id="exitSummary" class="exit-summary" aria-live="polite">添加分批平仓后，显示加权盈亏估算。</div>
       </fieldset>
 
       <fieldset>
@@ -308,7 +328,7 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
           </div>
           <div class="row">
             <label class="f">行情地址<input type="text" id="bnBase" class="num" placeholder="https://fapi.binance.com" list="bases"></label>
-            <label class="f">K线周期<select id="bnIv"><option value="5m">5 分钟</option><option value="15m">15 分钟</option><option value="1h">1 小时</option><option value="4h">4 小时</option><option value="1d">1 天</option></select></label>
+            <label class="f">短线周期<select id="bnIv"><option value="5m">短线 · 5 分钟</option><option value="15m" selected>短线 · 15 分钟</option></select></label>
           </div>
           <datalist id="bases"><option value="https://fapi.binance.com"><option value="https://api.binance.com"><option value="https://data-api.binance.vision"></datalist>
           <div class="opts"><label><input type="checkbox" id="liveOn"> 实时刷新现价（每 1 秒）</label></div>
@@ -326,7 +346,7 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
 
     <aside class="stage">
       <div class="live" id="live" hidden></div>
-      <canvas id="cv" width="1080" height="1350" aria-label="交易单预览"></canvas>
+      <canvas id="cv" width="1080" height="1650" aria-label="交易单预览"></canvas>
       <div class="actions">
         <button type="button" class="btn" id="btnGen">生成图片</button>
         <button type="button" class="btn ghost" id="btnSave">保存到历史</button>
@@ -340,6 +360,7 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
     <div class="hhead">
       <h2>历史交易单</h2>
       <div class="hbtns">
+        <button type="button" class="btn ghost small" id="btnExpExcel">导出 Excel</button>
         <button type="button" class="btn ghost small" id="btnExpCsv">导出表格 CSV</button>
         <button type="button" class="btn ghost small" id="btnExpJson">导出备份 JSON</button>
         <button type="button" class="btn ghost small" id="btnImp">导入备份</button>
@@ -348,6 +369,7 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
       </div>
     </div>
     <div class="stats" id="stats"></div>
+    <p class="hint">胜率 = 盈利单 ÷（盈利单 + 亏损单）；保本单单独统计，不计入胜率。保本率 = 保本单 ÷ 已结束交易（盈利、亏损、保本）。</p>
     <div class="hlist" id="hlist"></div>
   </section>
 </main>
@@ -388,12 +410,12 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
     author: '示例署名', note: '风险系数较高，小仓位尝试；打到第一止盈平七成挂保本。',
     disclaimer: '以上仅为个人策略记录，不构成投资建议。市场有风险，入市需谨慎。',
     theme: 'light', redUp: '0', showMetrics: true, showTime: true,
-    result: 'pending', resultText: '', showChart: true, kl: null, market: 'futures', bnIv: '1h',
+    result: 'pending', resultText: '', exits: [], feeRate: '', showChart: true, kl: null, klTrend: null, market: 'futures', bnIv: '15m',
     bnBase: 'https://fapi.binance.com', bnProxy: ''
   };
-  var TEXT_IDS = ['symbol','subtitle','entryLo','entryHi','sl','size','author','note','disclaimer','resultText','bnBase','bnProxy','bnIv'];
+  var TEXT_IDS = ['symbol','subtitle','entryLo','entryHi','sl','size','author','note','disclaimer','resultText','feeRate','bnBase','bnProxy','bnIv'];
   var CHECK_IDS = ['showMetrics','showTime','showChart'];
-  var CARD_KEYS = ['symbol','subtitle','dir','entryLo','entryHi','sl','size','tps','author','note','disclaimer','theme','redUp','showMetrics','showTime','result','resultText','showChart','kl'];
+  var CARD_KEYS = ['symbol','subtitle','dir','entryLo','entryHi','sl','size','tps','exits','feeRate','author','note','disclaimer','theme','redUp','showMetrics','showTime','result','resultText','showChart','kl','klTrend'];
   var MAX_TP = 5, MAX_HIST = 100;
   var KEY = 'trade-card-v1', HKEY = 'trade-card-history-v1';
   var S = {}, hist = [], currentId = null;
@@ -403,6 +425,7 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
   Object.keys(DEFAULTS).forEach(function (k) { if (S[k] === undefined) S[k] = JSON.parse(JSON.stringify(DEFAULTS[k])); });
   if (!Array.isArray(S.tps) || !S.tps.length) S.tps = [{ lo: S.tpLo || '', hi: S.tpHi || '' }];
   delete S.tpLo; delete S.tpHi;
+  if (!Array.isArray(S.exits)) S.exits = [];
   try { hist = JSON.parse(localStorage.getItem(HKEY) || '[]') || []; } catch (e) { hist = []; }
   if (!Array.isArray(hist)) hist = [];
   hist = hist.filter(function (h) { return h && typeof h === 'object' && h.card && typeof h.card === 'object' && typeof h.id === 'string'; }).slice(0, MAX_HIST);
@@ -482,7 +505,7 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
   /* ---------- form: text / checks / segs ---------- */
   TEXT_IDS.forEach(function (id) {
     var el = $(id); el.value = S[id] || '';
-    el.addEventListener('input', function () { S[id] = el.value; save(); schedule(); });
+    el.addEventListener('input', function () { S[id] = el.value; save(); schedule(); if (id === 'entryLo' || id === 'entryHi' || id === 'dir') updateExitSummary(); });
   });
   CHECK_IDS.forEach(function (id) {
     var el = $(id); el.checked = !!S[id];
@@ -495,6 +518,7 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
     seg.addEventListener('click', function (e) {
       var b = e.target.closest('button'); if (!b) return;
       S[key] = b.getAttribute('data-v');
+      if (key === 'dir') updateExitSummary();
       if (key === 'market') { S.bnBase = S.market === 'spot' ? 'https://api.binance.com' : 'https://fapi.binance.com'; $('bnBase').value = S.bnBase; }
       save(); paint(); schedule();
     });
@@ -524,16 +548,50 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
   }
   $('btnAddTp').addEventListener('click', function () { if (S.tps.length < MAX_TP) { S.tps.push({ lo: '', hi: '' }); save(); buildTps(); schedule(); } });
 
+  function updateExitSummary() {
+    var entry=mid(S.entryLo,S.entryHi), long=S.dir==='long', fee=Math.max(0,num(S.feeRate)||0), allocated=0, gross=0, fees=0, valid=true;
+    S.exits.forEach(function(x){ var pct=num(x.pct), price=x.be?entry:num(x.price); if(!(pct>0)||!isFinite(price)||!isFinite(entry)){valid=false;return;} allocated+=pct; var move=(long?price-entry:entry-price)/entry; gross+=move*pct; fees+=fee*2*pct/100; });
+    var out=$('exitSummary');
+    if (!S.exits.length) { out.textContent='添加分批平仓后，显示加权盈亏估算。'; return; }
+    if (!valid || allocated>100.001 || !(entry>0) || fee>10) { out.textContent='请检查进场价、平仓比例和平仓价；累计比例不能超过 100%，手续费率需在 0–10% 内。当前合计 '+allocated.toFixed(2)+'%。'; return; }
+    var net=gross-fees, left=Math.max(0,100-allocated);
+    out.textContent='已平 '+allocated.toFixed(2)+'% · 剩余 '+left.toFixed(2)+'%'+(left>0.001?'（未计入已实现盈亏）':'（全部平仓）')+'；加权毛收益 '+gross.toFixed(2)+'%'+(fee>0?' · 估算手续费 '+fees.toFixed(2)+'% · 净收益 '+net.toFixed(2)+'%':' · 净收益 '+net.toFixed(2)+'%（未计手续费/资金费）');
+    if (left<=0.001) {
+      var r=net>0.000001?'win':net< -0.000001?'loss':'be';
+      if (S.result!==r) { S.result=r; Array.prototype.forEach.call(document.querySelectorAll('.seg[data-key="result"] button'),function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-v')===r));}); save(); }
+    }
+  }
+  function exitDetails(c) {
+    return (c.exits||[]).map(function(x){return String(x.pct||'0')+'% @ '+(x.be?'保本价':String(x.price||'—'));}).join('；');
+  }
+  function buildExits() {
+    var box=$('exitList'); box.textContent='';
+    S.exits.forEach(function(x,i){
+      var row=document.createElement('div'); row.className='exit-row';
+      function field(label,key,ph){var wrap=document.createElement('label');wrap.className='f';wrap.textContent=label;var inp=document.createElement('input');inp.type='text';inp.inputMode='decimal';inp.className='num';inp.placeholder=ph||'';inp.value=x[key]||'';inp.addEventListener('input',function(){x[key]=inp.value;updateExitSummary();save();});wrap.appendChild(inp);return {wrap:wrap,input:inp};}
+      var n=document.createElement('div');n.className='tag';n.textContent='平仓 '+(i+1);
+      var q=field('平仓比例 %','pct','50'), p=field('平仓价','price','价格');
+      var be=document.createElement('label');be.className='be-label';var ck=document.createElement('input');ck.type='checkbox';ck.checked=!!x.be;var tx=document.createElement('span');tx.textContent='保本';be.appendChild(ck);be.appendChild(tx);
+      function syncBe(){x.be=ck.checked;p.input.disabled=ck.checked;if(ck.checked){var ep=mid(S.entryLo,S.entryHi);p.input.value=isFinite(ep)?fmt(ep):'';x.price=p.input.value;}updateExitSummary();save();}
+      ck.addEventListener('change',syncBe);
+      var del=document.createElement('button');del.type='button';del.className='del-exit';del.textContent='×';del.setAttribute('aria-label','删除分批平仓');del.addEventListener('click',function(){S.exits.splice(i,1);buildExits();updateExitSummary();save();});
+      p.input.disabled=!!x.be;row.appendChild(n);row.appendChild(q.wrap);row.appendChild(p.wrap);row.appendChild(be);row.appendChild(del);box.appendChild(row);
+    });
+    updateExitSummary();
+  }
+  $('btnAddExit').addEventListener('click',function(){S.exits.push({pct:'',price:'',be:false});buildExits();save();});
+  $('feeRate').addEventListener('input',function(){S.feeRate=this.value;updateExitSummary();save();});
+
   function syncForm() {
     TEXT_IDS.forEach(function (id) { $(id).value = S[id] || ''; });
     CHECK_IDS.forEach(function (id) { $(id).checked = !!S[id]; });
     segPaint.forEach(function (p) { p(); });
-    buildTps(); save(); schedule();
+    buildTps(); buildExits(); save(); schedule();
   }
 
   /* ---------- canvas ---------- */
   var cv = $('cv'), ctx = cv.getContext('2d');
-  var W = 1080, H = 1350, P = 72;
+  var W = 1080, H = 1650, P = 72;
   var UI = '"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif';
   var NUM = '"JetBrains Mono","Noto Sans SC","SF Mono",Menlo,monospace';
   var THEMES = {
@@ -649,6 +707,10 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
     });
     ctx.fillStyle = T.muted; ctx.font = '500 18px ' + UI;
     ctx.fillText((s.symbol || '').trim().toUpperCase() + ' · ' + (s.kl.mk === 'spot' ? '币安现货' : '币安 U 本位') + ' · ' + s.kl.iv + ' · ' + n + ' 根K线' + (live && live.sym === normSymbol(s.symbol) ? ' · 蓝线为实时价' : ''), bx.x + 18, bx.y + bx.h - 10);
+    if (s.kl.iv !== '1h' && s.klTrend && s.klTrend.sym === normSymbol(s.symbol) && s.klTrend.d && s.klTrend.d.length > 1) {
+      var td=s.klTrend.d, first=td[0][0], lastTrend=td[td.length-1][3], diff=(lastTrend-first)/first*100, trendColor=diff>=0?'#12a572':'#e5484d';
+      ctx.fillStyle=trendColor; ctx.font='700 17px '+UI; ctx.textAlign='right'; ctx.fillText('1小时趋势  '+(diff>=0?'↗':'↘')+' '+(diff>=0?'+':'')+diff.toFixed(2)+'%',bx.x+bx.w-18,bx.y+bx.h-10); ctx.textAlign='left';
+    }
   }
 
   function drawCard(c, s) {
@@ -698,7 +760,9 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
     vals = vals.filter(isFinite);
     var yA = 420;
     var chartOn = s.showChart !== false && s.kl && s.kl.d && s.kl.d.length > 5 && s.kl.sym === normSymbol(s.symbol);
-    if (chartOn) drawChart(s, T, UPC, DNC, tpC, slC, tpNums, eLo, eHi, sl, { x: P, y: 346, w: W - 2 * P, h: 470 });
+    var trendOn = chartOn && s.klTrend && s.klTrend.d && s.klTrend.d.length > 5 && s.klTrend.sym === normSymbol(s.symbol);
+    if (chartOn) drawChart(s, T, UPC, DNC, tpC, slC, tpNums, eLo, eHi, sl, { x: P, y: 346, w: W - 2 * P, h: trendOn ? 330 : 470 });
+    if (trendOn) { var shortData=s.kl; s.kl=s.klTrend; drawChart(s,T,UPC,DNC,tpC,slC,[],NaN,NaN,NaN,{x:P,y:690,w:W-2*P,h:300}); s.kl=shortData; }
     if (!chartOn) { ctx.fillStyle = T.line; rr(P, yA - 2, W - 2 * P, 4, 2); ctx.fill(); }
     if (!chartOn && vals.length >= 3 && isFinite(eLo) && isFinite(sl) && isFinite(tpNums[0][0])) {
       var mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals), pad = (mx - mn) * 0.1 || 1;
@@ -716,7 +780,7 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
     var rows = [['进场区间', rangeText(s.entryLo, s.entryHi), T.ink], ['仓位', (s.size || '').trim() || '—', T.ink]];
     tps.forEach(function (t, i) { rows.push([multi ? '止盈 ' + (i + 1) : '止盈', rangeText(t.lo, t.hi), tpC]); });
     rows.push(['止损', (s.sl || '').trim() || '—', slC]);
-    var y0 = chartOn ? 836 : 540, rowH = Math.min(68, (chartOn ? 230 : 420) / rows.length);
+    var y0 = chartOn ? (trendOn ? 1010 : 836) : 540, rowH = Math.min(58, (chartOn ? 225 : 420) / rows.length);
     var lf = rowH >= 84 ? 30 : Math.max(22, Math.round(rowH * 0.34)), vf = rowH >= 84 ? 54 : Math.round(rowH * 0.56);
     rows.forEach(function (r, i) {
       var y = y0 + i * rowH;
@@ -753,18 +817,18 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
     var note = (s.note || '').trim();
     if (note) {
       ctx.fillStyle = T.ink; ctx.font = '400 28px ' + UI;
-      var noteTop = yN + 24, noteBottom = 1218, noteLines = wrapText(note, W - 2 * P, 2);
+      var noteTop = yN + 24, noteBottom = 1510, noteLines = wrapText(note, W - 2 * P, 2);
       ctx.fillStyle = T.panel; rr(P, noteTop - 10, W - 2 * P, Math.min(88, noteLines.length * 38 + 20), 14); ctx.fill();
       ctx.fillStyle = T.ink; ctx.font = '400 26px ' + UI;
       noteLines.forEach(function (ln, i) { var baseline = noteTop + 28 + i * 36; if (baseline <= noteBottom) ctx.fillText(ln, P + 18, baseline); });
     }
 
     // footer
-    ctx.fillStyle = T.line; ctx.fillRect(P, 1248, W - 2 * P, 2);
+    ctx.fillStyle = T.line; ctx.fillRect(P, 1540, W - 2 * P, 2);
     var dis = (s.disclaimer || '').trim();
     if (dis) {
       ctx.fillStyle = T.muted; ctx.font = '400 21px ' + UI;
-      wrapText('风险提示：' + dis.replace(/^风险提示[:：]?/, ''), W - 2 * P, 2).forEach(function (ln, i) { ctx.fillText(ln, P, 1286 + i * 30); });
+      wrapText('风险提示：' + dis.replace(/^风险提示[:：]?/, ''), W - 2 * P, 2).forEach(function (ln, i) { ctx.fillText(ln, P, 1582 + i * 30); });
     }
     return A;
   }
@@ -870,7 +934,7 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
     var w = 0, l = 0, b = 0, p = 0;
     hist.forEach(function (it) { var r = it.card.result || 'pending'; if (r === 'win') w++; else if (r === 'loss') l++; else if (r === 'be') b++; else p++; });
     var st = $('stats'); st.textContent = '';
-    [['共', hist.length + ' 单'], ['盈利', w], ['亏损', l], ['保本', b], ['进行中', p], ['胜率', (w + l) ? Math.round(w / (w + l) * 100) + '%' : '—']].forEach(function (x) {
+    [['共', hist.length + ' 单'], ['盈利', w], ['亏损', l], ['保本', b], ['进行中', p], ['胜率', (w + l) ? Math.round(w / (w + l) * 100) + '%' : '—'], ['保本率', (w + l + b) ? Math.round(b / (w + l + b) * 100) + '%' : '—']].forEach(function (x) {
       var s = document.createElement('span'); s.appendChild(document.createTextNode(x[0] + ' ')); var bb = document.createElement('b'); bb.textContent = x[1]; s.appendChild(bb); st.appendChild(s);
     });
     if (!hist.length) { var e = document.createElement('div'); e.className = 'empty'; e.textContent = '还没有记录。点击“生成图片”或“保存到历史”后，这里会出现交易单。'; list.appendChild(e); return; }
@@ -884,7 +948,7 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
       t1.appendChild(sy); t1.appendChild(dr); t1.appendChild(resultPill(c.result));
       var sub = document.createElement('div'); sub.className = 'sub';
       var A = analyse(c);
-      sub.textContent = (c.ts || '') + ' · 进场 ' + rangeText(c.entryLo, c.entryHi) + ' · 止损 ' + (c.sl || '—') + (A.ok ? ' · 盈亏比 1:' + A.rr.toFixed(2) : '') + (c.resultText ? ' · ' + c.resultText : '');
+      sub.textContent = (c.ts || '') + ' · 进场 ' + rangeText(c.entryLo, c.entryHi) + ' · 止损 ' + (c.sl || '—') + (A.ok ? ' · 盈亏比 1:' + A.rr.toFixed(2) : '') + (c.exits && c.exits.length ? ' · 分批：' + exitDetails(c) + ' · 手续费率 ' + (c.feeRate||'0') + '%' : '') + (c.resultText ? ' · ' + c.resultText : '');
       var ops = document.createElement('div'); ops.className = 'ops';
       function btn(txt, fn, pressed) { var x = document.createElement('button'); x.type = 'button'; x.textContent = txt; if (pressed !== undefined) x.setAttribute('aria-pressed', String(pressed)); x.addEventListener('click', fn); ops.appendChild(x); return x; }
       btn('载入', function () {
@@ -910,14 +974,21 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
   /* ---------- export / import ---------- */
   function csvCell(v) { v = String(v === undefined || v === null ? '' : v); if (/^[\u0000-\u0020]*[=+@\-\t\r]/.test(v)) v = "'" + v; return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
   function buildCsv() {
-    var head = ['时间', '交易对', '方向', '进场区间', '仓位', '止盈', '止损', '盈亏比', '结果', '结果说明', '备注'];
+    var head = ['时间', '交易对', '方向', '进场区间', '仓位', '止盈', '止损', '盈亏比', '分批平仓', '手续费率(每边%)', '结果', '结果说明', '备注'];
     var lines = [head.join(',')];
     hist.slice().reverse().forEach(function (it) {
       var c = it.card, A = analyse(c);
       lines.push([c.ts, c.symbol, c.dir === 'long' ? '做多' : '做空', rangeText(c.entryLo, c.entryHi), c.size,
-        usedTps(c).map(function (t) { return rangeText(t.lo, t.hi); }).join(' | '), c.sl, A.ok ? A.rr.toFixed(2) : '', RESULT_LABEL[c.result || 'pending'], c.resultText, (c.note || '').replace(/\n/g, ' ')].map(csvCell).join(','));
+        usedTps(c).map(function (t) { return rangeText(t.lo, t.hi); }).join(' | '), c.sl, A.ok ? A.rr.toFixed(2) : '', exitDetails(c), c.feeRate||'', RESULT_LABEL[c.result || 'pending'], c.resultText, (c.note || '').replace(/\n/g, ' ')].map(csvCell).join(','));
     });
     return lines.join('\n');
+  }
+  function buildExcelXml() {
+    var head=['时间','交易对','方向','进场区间','仓位','止盈','止损','盈亏比','分批平仓','手续费率(每边%)','结果','结果说明','备注'];
+    var rows=[head];
+    hist.slice().reverse().forEach(function(it){ var c=it.card,A=analyse(c); rows.push([c.ts,c.symbol,c.dir==='long'?'做多':'做空',rangeText(c.entryLo,c.entryHi),c.size,usedTps(c).map(function(t){return rangeText(t.lo,t.hi);}).join(' | '),c.sl,A.ok?A.rr.toFixed(2):'',exitDetails(c),c.feeRate||'',RESULT_LABEL[c.result||'pending'],c.resultText,(c.note||'').replace(/\n/g,' ')]); });
+    function esc(v){return String(v===undefined||v===null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');}
+    return '<?xml version="1.0" encoding="UTF-8"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="交易记录"><Table>'+rows.map(function(row){return '<Row>'+row.map(function(v){return '<Cell><Data ss:Type="String">'+esc(v)+'</Data></Cell>';}).join('')+'</Row>';}).join('')+'</Table></Worksheet></Workbook>';
   }
   function buildJson() { return JSON.stringify({ app: 'trade-card', version: 1, items: hist.map(function (h) { return { id: h.id, card: h.card }; }) }, null, 2); }
   var xFile = { name: '', text: '', mime: '' };
@@ -925,10 +996,12 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
     if (!hist.length) { toast('历史是空的，没有可导出的内容。'); return; }
     var d = new Date(), tag = d.getFullYear() + two(d.getMonth() + 1) + two(d.getDate());
     if (kind === 'csv') xFile = { name: 'trades-' + tag + '.csv', text: '﻿' + buildCsv(), mime: 'text/csv;charset=utf-8' };
+    else if (kind === 'excel') xFile = { name: 'trades-' + tag + '.xls', text: buildExcelXml(), mime: 'application/vnd.ms-excel;charset=utf-8' };
     else xFile = { name: 'trades-' + tag + '.json', text: buildJson(), mime: 'application/json' };
     $('xText').value = xFile.text.replace(/^﻿/, ''); $('xMsg').textContent = '共 ' + hist.length + ' 单。'; $('xsheet').hidden = false;
   }
   $('btnExpCsv').addEventListener('click', function () { openExport('csv'); });
+  $('btnExpExcel').addEventListener('click', function () { openExport('excel'); });
   $('btnExpJson').addEventListener('click', function () { openExport('json'); });
   $('xClose').addEventListener('click', function () { $('xsheet').hidden = true; });
   $('xsheet').addEventListener('click', function (e) { if (e.target === $('xsheet')) $('xsheet').hidden = true; });
@@ -961,6 +1034,7 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
           CARD_KEYS.forEach(function (k) {
             var v = x.card[k]; if (v === undefined) return;
             if (k === 'tps') { if (!Array.isArray(v) || v.length > MAX_TP) valid = false; else c[k] = v.map(function (t) { return { lo: String((t && t.lo) || '').slice(0, 80), hi: String((t && t.hi) || '').slice(0, 80) }; }); }
+            else if (k === 'exits') { if (!Array.isArray(v) || v.length > 20) valid = false; else c[k] = v.map(function(x){return {pct:String((x&&x.pct)||'').slice(0,20),price:String((x&&x.price)||'').slice(0,40),be:!!(x&&x.be)};}); }
             else if (typeof v === 'string') c[k] = v.slice(0, 2000);
             else if (typeof v === 'boolean' || typeof v === 'number' || v === null) c[k] = v;
             else valid = false;
@@ -1046,9 +1120,9 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
     var sym = normSymbol(S.symbol);
     if (!sym) { say('先填写交易对，例如 ETHUSDT。'); return; }
     say('正在加载 ' + sym + ' ' + S.bnIv + ' K线…');
-    Promise.all([Binance.klines(sym, S.bnIv, 60), Binance.ticker(sym).catch(function () { return null; })]).then(function (r) {
-      S.kl = { sym: sym, iv: S.bnIv, mk: S.market, d: r[0] }; S.showChart = true; $('showChart').checked = true; if (r[1]) lastTicker = r[1];
-      save(); schedule(); say('已加载 ' + r[0].length + ' 根K线，图表已加入交易单。换交易对后需要重新加载。');
+    Promise.all([Binance.klines(sym, S.bnIv, 60), Binance.klines(sym, '1h', 60), Binance.ticker(sym).catch(function () { return null; })]).then(function (r) {
+      S.kl = { sym: sym, iv: S.bnIv, mk: S.market, d: r[0] }; S.klTrend = { sym:sym, iv:'1h', mk:S.market, d:r[1] }; S.showChart = true; $('showChart').checked = true; if (r[2]) lastTicker = r[2];
+      save(); schedule(); say('已加载 ' + S.bnIv + ' 短线图与 1 小时趋势参考。');
     }).catch(function (e) { say('加载失败：' + Binance.explain(e)); });
   });
   Array.prototype.forEach.call(document.querySelectorAll('#hotCoins [data-symbol]'), function (b) {
@@ -1090,7 +1164,7 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
     }).catch(function (e) { say('读取失败：' + (e && e.message ? e.message : '网络请求被拒绝')); });
   });
 
-  buildTps(); renderHist(); schedule();
+  buildTps(); buildExits(); renderHist(); schedule();
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { fontKey = ''; ensureFonts().then(draw); });
   // thumbnails missing from older/imported items
   hist.forEach(function (it) { if (!it.thumb) makeThumb(it.card).then(function (th) { it.thumb = th; saveHist(); renderHist(); }); });
