@@ -423,12 +423,35 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
   try { S = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { S = {}; }
   if (!S || typeof S !== 'object' || Array.isArray(S)) S = {};
   Object.keys(DEFAULTS).forEach(function (k) { if (S[k] === undefined) S[k] = JSON.parse(JSON.stringify(DEFAULTS[k])); });
+  TEXT_IDS.forEach(function(k){if(typeof S[k]!=='string') S[k]=String(DEFAULTS[k]||''); else S[k]=S[k].slice(0,2000);});
+  CHECK_IDS.forEach(function(k){if(typeof S[k]!=='boolean') S[k]=!!DEFAULTS[k];});
+  if (['long','short'].indexOf(S.dir)<0) S.dir=DEFAULTS.dir;
+  if (['light','dark'].indexOf(S.theme)<0) S.theme=DEFAULTS.theme;
+  if (['pending','win','loss','be'].indexOf(S.result)<0) S.result=DEFAULTS.result;
+  if (['spot','futures'].indexOf(S.market)<0) S.market=DEFAULTS.market;
+  if (['5m','15m','1h','4h','1d'].indexOf(S.bnIv)<0) S.bnIv=DEFAULTS.bnIv;
   if (!Array.isArray(S.tps) || !S.tps.length) S.tps = [{ lo: S.tpLo || '', hi: S.tpHi || '' }];
+  S.tps=S.tps.slice(0,MAX_TP).map(function(t){return {lo:String((t&&t.lo)||'').slice(0,80),hi:String((t&&t.hi)||'').slice(0,80)};});
+  if (!Array.isArray(S.exits)) S.exits = [];
+  S.exits=S.exits.slice(0,20).map(function(x){return {pct:String((x&&x.pct)||'').slice(0,20),price:String((x&&x.price)||'').slice(0,40),be:!!(x&&x.be)};});
+  function validStoredKlines(k){return k&&typeof k==='object'&&typeof k.sym==='string'&&['5m','15m','1h','4h','1d'].indexOf(k.iv)>=0&&['spot','futures'].indexOf(k.mk)>=0&&Array.isArray(k.d)&&k.d.length<=100&&k.d.every(function(c){return Array.isArray(c)&&c.length===4&&c.every(function(v){return typeof v==='number'&&isFinite(v);});});}
+  if(!validStoredKlines(S.kl)) S.kl=null;
+  if(!validStoredKlines(S.klTrend)) S.klTrend=null;
   delete S.tpLo; delete S.tpHi;
   if (!Array.isArray(S.exits)) S.exits = [];
   try { hist = JSON.parse(localStorage.getItem(HKEY) || '[]') || []; } catch (e) { hist = []; }
   if (!Array.isArray(hist)) hist = [];
   hist = hist.filter(function (h) { return h && typeof h === 'object' && h.card && typeof h.card === 'object' && typeof h.id === 'string'; }).slice(0, MAX_HIST);
+  hist = hist.filter(function(h){var c=h.card;return c&&typeof c==='object'&&!Array.isArray(c);});
+  hist.forEach(function(h){
+    var c=h.card;
+    ['symbol','subtitle','entryLo','entryHi','sl','size','author','note','disclaimer','resultText','feeRate','ts'].forEach(function(k){if(typeof c[k]!=='string')c[k]='';else c[k]=c[k].slice(0,2000);});
+    if(['long','short'].indexOf(c.dir)<0)c.dir='long'; if(['pending','win','loss','be'].indexOf(c.result)<0)c.result='pending';
+    if(!Array.isArray(c.tps))c.tps=[]; c.tps=c.tps.slice(0,MAX_TP).map(function(t){return {lo:String((t&&t.lo)||'').slice(0,80),hi:String((t&&t.hi)||'').slice(0,80)};});
+    if(!Array.isArray(c.exits))c.exits=[]; c.exits=c.exits.slice(0,20).map(function(x){return {pct:String((x&&x.pct)||'').slice(0,20),price:String((x&&x.price)||'').slice(0,40),be:!!(x&&x.be)};});
+    if(!validStoredKlines(c.kl))c.kl=null; if(!validStoredKlines(c.klTrend))c.klTrend=null;
+    if(typeof h.thumb!=='string'||h.thumb.length>600000||!/^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/.test(h.thumb))h.thumb='';
+  });
 
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
   function saveHist() {
@@ -446,15 +469,23 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
   var BASES = { futures: ['https://fapi.binance.com'], spot: ['https://api.binance.com', 'https://data-api.binance.vision'] };
   var Binance = {
     candidates: function () {
-      var l = [(S.bnBase || '').replace(/\/+$/, '')].concat(BASES[S.market] || BASES.futures);
+      var custom = String(S.bnBase || '').trim(), list = BASES[S.market] || BASES.futures;
+      if (custom) {
+        var u; try { u = new URL(custom); } catch (e) { throw new Error('行情地址不是有效 URL'); }
+        var local = ['localhost','127.0.0.1','[::1]'].indexOf(u.hostname) >= 0;
+        if ((u.protocol !== 'https:' && !(local && u.protocol === 'http:')) || u.username || u.password || u.search || u.hash || (u.pathname !== '/' && u.pathname !== '')) throw new Error('行情地址只允许 HTTPS 主机地址；本机可用 HTTP，不能包含路径、账号、参数或片段');
+        custom = u.origin;
+      }
+      var l = (custom ? [custom] : []).concat(list);
       return l.filter(function (x, i) { return x && l.indexOf(x) === i; });
     },
     get: function (path) {
-      var list = this.candidates(), i = 0, last = null;
+      var list; try { list = this.candidates(); } catch (e) { return Promise.reject(e); }
+      var i = 0, last = null;
       function next() {
         if (i >= list.length) return Promise.reject(last);
         var b = list[i++];
-        return fetch(b + path).then(function (r) { if (r.ok) return r.json(); var e = new Error('HTTP ' + r.status); e.status = r.status; throw e; })
+        return fetch(b + path, { credentials:'omit', redirect:'error', signal:AbortSignal.timeout(8000) }).then(function (r) { if (r.ok) return r.json(); var e = new Error('HTTP ' + r.status); e.status = r.status; throw e; })
           .catch(function (e) { last = e; if (e.status === 400) throw e; return next(); });
       }
       return next();
@@ -486,13 +517,13 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
       if (u.username || u.password || u.search || u.hash) return Promise.reject(new Error('后端地址不能包含账号、密码、查询参数或片段'));
       return fetch(u.href.replace(/\/+$/, '') + '/positions', { signal: AbortSignal.timeout(10000), credentials: 'omit', redirect: 'error' })
         .then(function (r) { if (!r.ok) throw new Error('后端返回 ' + r.status); return r.json(); })
-        .then(function (list) { return (list || []).filter(function (p) { return parseFloat(p.positionAmt) !== 0; }); });
+        .then(function (list) { if (!Array.isArray(list) || list.length > 500) throw new Error('后端持仓数据格式无效或数量过多'); return list.filter(function (p) { return p && typeof p === 'object' && /^[A-Z0-9]{2,30}$/.test(String(p.symbol||'')) && isFinite(parseFloat(p.positionAmt)) && parseFloat(p.positionAmt) !== 0; }); });
     }
   };
   var lastTicker = null, liveTimer = null;
 
   /* ---------- helpers ---------- */
-  function num(v) { var n = parseFloat(String(v === undefined || v === null ? '' : v).replace(/,/g, '')); return isFinite(n) ? n : NaN; }
+  function num(v) { var s=String(v===undefined||v===null?'':v).replace(/,/g,'').trim(); if(!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(s)) return NaN; var n=Number(s); return isFinite(n)&&Math.abs(n)<1e100?n:NaN; }
   function dec(p) { return 2; }
   function fmt(p) { return isFinite(Number(p)) ? Number(p).toFixed(2) : '—'; }
   function normSymbol(s) { return String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); }
@@ -549,17 +580,18 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
   $('btnAddTp').addEventListener('click', function () { if (S.tps.length < MAX_TP) { S.tps.push({ lo: '', hi: '' }); save(); buildTps(); schedule(); } });
 
   function updateExitSummary() {
-    var entry=mid(S.entryLo,S.entryHi), long=S.dir==='long', fee=Math.max(0,num(S.feeRate)||0), allocated=0, gross=0, fees=0, valid=true;
-    S.exits.forEach(function(x){ var pct=num(x.pct), price=x.be?entry:num(x.price); if(!(pct>0)||!isFinite(price)||!isFinite(entry)){valid=false;return;} allocated+=pct; var move=(long?price-entry:entry-price)/entry; gross+=move*pct; fees+=fee*2*pct/100; });
+    var entry=mid(S.entryLo,S.entryHi), long=S.dir==='long', feeInput=num(S.feeRate), fee=isFinite(feeInput)?feeInput:0, allocated=0, gross=0, fees=0, valid=true;
+    S.exits.forEach(function(x){ var pct=num(x.pct), price=x.be?entry:num(x.price); if(!(pct>0)||!isFinite(price)||!isFinite(entry)||price<0){valid=false;return;} allocated+=pct; var move=(long?price-entry:entry-price)/entry; gross+=move*pct; fees+=fee*pct/100*(1+price/entry); });
     var out=$('exitSummary');
     if (!S.exits.length) { out.textContent='添加分批平仓后，显示加权盈亏估算。'; return; }
-    if (!valid || allocated>100.001 || !(entry>0) || fee>10) { out.textContent='请检查进场价、平仓比例和平仓价；累计比例不能超过 100%，手续费率需在 0–10% 内。当前合计 '+allocated.toFixed(2)+'%。'; return; }
+    function setResult(r){if(S.result===r)return;S.result=r;Array.prototype.forEach.call(document.querySelectorAll('.seg[data-key="result"] button'),function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-v')===r));});save();}
+    if (!valid || allocated>100.001 || !(entry>0) || fee<0 || fee>10) { out.textContent='请检查进场价、平仓比例和平仓价；累计比例不能超过 100%，手续费率需在 0–10% 内。当前合计 '+allocated.toFixed(2)+'%。'; setResult('pending'); return; }
     var net=gross-fees, left=Math.max(0,100-allocated);
-    out.textContent='已平 '+allocated.toFixed(2)+'% · 剩余 '+left.toFixed(2)+'%'+(left>0.001?'（未计入已实现盈亏）':'（全部平仓）')+'；加权毛收益 '+gross.toFixed(2)+'%'+(fee>0?' · 估算手续费 '+fees.toFixed(2)+'% · 净收益 '+net.toFixed(2)+'%':' · 净收益 '+net.toFixed(2)+'%（未计手续费/资金费）');
+    out.textContent='已平 '+allocated.toFixed(2)+'% · 剩余 '+left.toFixed(2)+'%'+(left>0.001?'（未计入已实现盈亏）':'（全部平仓）')+'；加权毛收益 '+gross.toFixed(2)+'%'+(fee>0?' · 估算开平仓手续费 '+fees.toFixed(2)+'% · 净收益 '+net.toFixed(2)+'%':' · 净收益 '+net.toFixed(2)+'%（未计手续费/资金费）')+'。收益率按进场名义金额计算，不含杠杆放大。';
     if (left<=0.001) {
       var r=net>0.000001?'win':net< -0.000001?'loss':'be';
-      if (S.result!==r) { S.result=r; Array.prototype.forEach.call(document.querySelectorAll('.seg[data-key="result"] button'),function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-v')===r));}); save(); }
-    }
+      setResult(r);
+    } else setResult('pending');
   }
   function exitDetails(c) {
     return (c.exits||[]).map(function(x){return String(x.pct||'0')+'% @ '+(x.be?'保本价':String(x.price||'—'));}).join('；');
@@ -1024,7 +1056,7 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
     var rd = new FileReader();
     rd.onload = function () {
       try {
-        var data = JSON.parse(rd.result), items = data.items || data, n = 0, have = {};
+        var data = JSON.parse(rd.result), items = data && (data.items || data), n = 0, have = Object.create(null);
         if (!Array.isArray(items) || items.length > 500) throw new Error('备份记录数量无效');
         hist.forEach(function (h) { have[h.id] = 1; });
         var fresh = [];
@@ -1045,6 +1077,7 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
           fresh.push({ id: x.id.slice(0, 100), card: c, thumb: '' }); have[x.id] = 1; n++;
         });
         hist = hist.concat(fresh).sort(function (a, b) { return String(b.card.ts || '').localeCompare(String(a.card.ts || '')); }).slice(0, MAX_HIST);
+        var kept=Object.create(null); hist.forEach(function(h){kept[h.id]=1;}); fresh=fresh.filter(function(it){return kept[it.id];}); n=fresh.length;
         saveHist(); renderHist(); toast('导入 ' + n + ' 单，正在生成缩略图…');
         var chain = Promise.resolve();
         fresh.forEach(function (it) { chain = chain.then(function () { return makeThumb(it.card).then(function (th) { it.thumb = th; }); }); });
@@ -1133,12 +1166,15 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
       $('btnKl').click();
     });
   });
+  var tickerBusy = false;
   function tick() {
-    if (document.hidden) return;
+    if (document.hidden || tickerBusy) return;
     var sym = normSymbol(S.symbol); if (!sym) return;
+    tickerBusy = true;
     Binance.ticker(sym).then(function (t) {
+      if (sym !== normSymbol(S.symbol)) return;
       lastTicker = t; renderLive(t);
-    }).catch(function (e) { say('实时刷新失败：' + Binance.explain(e)); });
+    }).catch(function (e) { say('实时刷新失败：' + Binance.explain(e)); }).then(function(){tickerBusy=false;});
   }
   $('liveOn').addEventListener('change', function () {
     clearInterval(liveTimer); liveTimer = null;
