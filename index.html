@@ -149,6 +149,81 @@ summary { cursor: pointer; font-size: 14px; font-weight: 500; }
 }
 @media (max-width: 420px) { .tp { grid-template-columns: minmax(0,1fr) minmax(0,1fr) 32px; gap: 6px; }
  .row.keep { grid-template-columns: minmax(0, 1fr); } }
+/* Refined visual system */
+body { background: radial-gradient(ellipse at 12% 0%, rgba(84,120,246,.09), transparent 35%), var(--bg); }
+.wrap { max-width:1180px; gap:24px; }
+header { padding:8px 2px 2px; }
+header h1 { font-size:24px; letter-spacing:.01em; }
+header p { margin-top:6px; font-size:14px; }
+.grid { grid-template-columns:minmax(0,1fr) minmax(340px,460px); gap:24px; }
+.panel,.hist { border-radius:18px; padding:22px; box-shadow:0 12px 36px rgba(26,38,62,.055); }
+fieldset { gap:12px; }
+legend { font-size:12px; font-weight:700; color:var(--muted); }
+input[type=text],textarea,select { border-radius:11px; transition:border-color .16s,box-shadow .16s,background .16s; }
+input[type=text]:focus,textarea:focus,select:focus { border-color:#5478f6; box-shadow:0 0 0 3px rgba(84,120,246,.13); outline:0; }
+.btn { transition:transform .15s,box-shadow .15s,opacity .15s; }
+.btn:hover { transform:translateY(-1px); box-shadow:0 5px 14px rgba(21,24,29,.12); }
+.stage { gap:14px; }
+.stage canvas { border-radius:16px; box-shadow:0 14px 36px rgba(26,38,62,.10); }
+.live { border-radius:18px; }
+.hist { gap:16px; }
+.hi { padding:14px 0; }
+@media (max-width:860px) {
+ .wrap { gap:16px; }
+ .grid { gap:16px; }
+ .panel,.hist { padding:16px; border-radius:15px; }
+ header h1 { font-size:21px; }
+}
+/* Full UI refresh */
+:root { --bg:#edf1f7; --surface:#fff; --ink:#172033; --muted:#758096; --line:#e2e8f1; --field:#f6f8fc; --btn-bg:#3155d9; --btn-fg:#fff; --warn:#c46a20; }
+body { color:var(--ink); background:radial-gradient(ellipse at 8% -5%,#dce7ff 0,transparent 34%),radial-gradient(ellipse at 94% 5%,#e3f5ef 0,transparent 28%),#f3f6fb; padding-top:30px; }
+.wrap { max-width:1260px; gap:26px; }
+header { position:relative; overflow:hidden; padding:28px 32px; border-radius:22px; color:white; background:linear-gradient(115deg,#17294f 0%,#2948a5 58%,#5278ee 100%); box-shadow:0 18px 42px rgba(39,67,145,.22); }
+header:after { content:""; position:absolute; width:260px; height:260px; right:8%; top:-150px; border:1px solid rgba(255,255,255,.20); border-radius:50%; box-shadow:0 0 0 30px rgba(255,255,255,.045),0 0 0 65px rgba(255,255,255,.035); }
+header h1 { position:relative; z-index:1; font-size:30px; letter-spacing:.02em; }
+header p { position:relative; z-index:1; color:rgba(255,255,255,.76); margin-top:8px; font-size:14px; }
+.grid { grid-template-columns:minmax(0,1fr) minmax(380px,480px); gap:24px; align-items:start; }
+.panel,.hist { background:rgba(255,255,255,.92); border:1px solid rgba(218,226,239,.9); border-radius:20px; padding:24px; box-shadow:0 14px 40px rgba(31,48,84,.075); }
+.panel { gap:22px; }
+fieldset { gap:13px; padding:0 0 2px; }
+legend { color:#52617c; font-size:12px; letter-spacing:.12em; font-weight:800; text-transform:uppercase; margin-bottom:2px; }
+legend:before { content:""; display:inline-block; width:7px; height:7px; margin:0 8px 1px 0; border-radius:3px; background:#5478f6; }
+label.f { color:#77839a; font-weight:600; gap:7px; }
+input[type=text],textarea,select { border:1px solid #e1e7f0; background:#f7f9fc; border-radius:12px; min-height:46px; padding:11px 13px; color:#1d2940; transition:.18s ease; }
+textarea { min-height:78px; }
+input[type=text]:focus,textarea:focus,select:focus { background:white; border-color:#6685fa; box-shadow:0 0 0 4px rgba(84,120,246,.12); outline:0; }
+.hotcoins { gap:7px; }
+.hotcoins button { background:#f5f7fc; border-color:#e5eaf3; color:#53617b; font-weight:700; }
+.hotcoins button[aria-pressed=true] { color:#3155d9; background:#edf2ff; border-color:#92a9ff; box-shadow:inset 0 0 0 1px #c7d3ff; }
+.seg { padding:4px; border-radius:13px; border-color:#e3e9f3; background:#f3f6fb; }
+.seg button { border-radius:10px; color:#7b879c; font-weight:600; }
+.seg button[aria-pressed=true] { color:#3155d9; background:white; box-shadow:0 2px 8px rgba(34,51,88,.12); }
+.btn { border-radius:12px; background:linear-gradient(135deg,#355bdd,#5277f0); box-shadow:0 6px 14px rgba(49,85,217,.18); }
+.btn.ghost { background:#fff; color:#42516e; border-color:#dfe6f1; box-shadow:none; }
+.btn.ghost:hover { color:#3155d9; border-color:#aabaff; background:#f7f9ff; }
+.stage { top:20px; gap:14px; }
+.live { border:1px solid #e1e8f4; border-left:4px solid #5277f0; border-radius:18px; background:linear-gradient(135deg,#fff,#f5f8ff); box-shadow:0 14px 34px rgba(31,48,84,.08); }
+.stage canvas { border:1px solid #e0e6f0; border-radius:18px; box-shadow:0 16px 38px rgba(31,48,84,.12); }
+.actions { gap:9px; }
+.actions .btn { min-height:46px; }
+.hist { gap:18px; }
+.hist h2 { font-size:19px; letter-spacing:.01em; }
+.stats { gap:8px; }
+.stats span { padding:9px 12px; border-radius:11px; color:#6e7b92; background:#f5f7fb; }
+.stats b { color:#263b69; }
+.hi { padding:15px 0; border-color:#edf0f5; }
+.hi img { border-radius:10px; }
+.hi .ops button { border-radius:9px; border-color:#e1e7f0; background:#f8faff; }
+.toast { color:#63718a; }
+@media(max-width:860px) {
+ body { padding-top:14px; }
+ header { padding:22px; border-radius:18px; }
+ header h1 { font-size:24px; }
+ .grid { grid-template-columns:minmax(0,1fr); }
+ .panel,.hist { padding:18px; }
+ .stage canvas { border-radius:14px; }
+}
+@media(max-width:420px) { header { padding:18px; } header h1 { font-size:21px; } .panel,.hist { padding:14px; } }
 </style>
 
 <main class="wrap">
@@ -236,7 +311,7 @@ summary { cursor: pointer; font-size: 14px; font-weight: 500; }
             <label class="f">K线周期<select id="bnIv"><option value="5m">5 分钟</option><option value="15m">15 分钟</option><option value="1h">1 小时</option><option value="4h">4 小时</option><option value="1d">1 天</option></select></label>
           </div>
           <datalist id="bases"><option value="https://fapi.binance.com"><option value="https://api.binance.com"><option value="https://data-api.binance.vision"></datalist>
-          <div class="opts"><label><input type="checkbox" id="liveOn"> 实时刷新现价（每 5 秒）</label></div>
+          <div class="opts"><label><input type="checkbox" id="liveOn"> 实时刷新现价（每 1 秒）</label></div>
           <div class="btns">
             <button type="button" class="btn ghost small" id="btnPrice">按现价生成点位</button>
             <button type="button" class="btn ghost small" id="btnKl">加载K线</button>
