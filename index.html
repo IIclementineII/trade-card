@@ -226,6 +226,8 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
 .exit-row .be-label { display:flex; align-items:center; gap:5px; height:42px; white-space:nowrap; font-size:12px; }
 .exit-row .del-exit { height:42px; width:34px; border:1px solid var(--line); background:white; color:var(--muted); border-radius:9px; cursor:pointer; }
 .exit-summary { padding:11px 13px; border-radius:11px; background:#f1f5ff; color:#394d7b; font-size:13px; line-height:1.7; }
+.op-hint { margin:9px 0 0; padding:10px 12px; border:1px solid #e2e9f7; border-radius:10px; background:#f7f9ff; color:#66748d; font-size:12px; line-height:1.7; }
+.op-hint strong { color:#405783; }
 @media(max-width:560px) { .exit-row { grid-template-columns:64px 1fr 1fr 30px; } .exit-row .be-label { grid-column:2/4; height:auto; } }
 .hi { padding:15px 0; border-color:#edf0f5; }
 .hi img { border-radius:10px; }
@@ -275,6 +277,7 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
         </div>
         <div id="tpList" style="display:flex;flex-direction:column;gap:8px"></div>
         <div><button type="button" class="btn ghost small" id="btnAddTp">+ 添加止盈位</button></div>
+        <p class="op-hint"><strong>怎么填：</strong>单一进场价或止盈价只填“起”，区间才需要填“止”；做多止盈高于进场、止损低于进场，做空则相反。例：做空 1770，跌到 1730 止盈，就把止盈第一格填 1730、第二格留空。</p>
         <div class="warn" id="warn" role="status"></div>
       </fieldset>
 
@@ -291,6 +294,7 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
         <div class="btns"><button type="button" class="btn ghost small" id="btnAddExit">+ 添加分批平仓</button></div>
         <div class="row"><label class="f">手续费率（每边 %，可空）<input type="text" id="feeRate" inputmode="decimal" placeholder="例如 0.05"></label></div>
         <div id="exitSummary" class="exit-summary" aria-live="polite">添加分批平仓后，显示加权盈亏估算。</div>
+        <p class="op-hint"><strong>分批平仓：</strong>每行填实际平仓价和已平仓比例，比例合计不应超过 100%。勾选“保本”表示该部分按进场均价离场；填写手续费率可估算手续费后结果，资金费和滑点不在估算内。</p>
       </fieldset>
 
       <fieldset>
@@ -336,6 +340,7 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
             <button type="button" class="btn ghost small" id="btnPrice">按现价生成点位</button>
             <button type="button" class="btn ghost small" id="btnKl">加载K线</button>
           </div>
+          <p class="op-hint"><strong>行情操作：</strong>先选现货或 U 本位合约，再选 5 分钟或 15 分钟短线周期，点击“加载 K 线”；页面同时显示 1 小时趋势参考。勾选“实时刷新现价”后会每秒更新价格。行情接口不可用时，仍可手动填写点位并生成交易单。</p>
           <label class="f">你的后端地址（读取持仓，可空）<input type="text" id="bnProxy" class="num" placeholder="https://api.example.com/binance"></label>
           <div class="btns"><button type="button" class="btn ghost small" id="btnPos">导入持仓</button></div>
           <div class="chips" id="posList"></div>
