@@ -660,15 +660,17 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
   function usedTps(s) { var l = (s.tps || []).filter(function (t) { return String(t.lo || '').trim() || String(t.hi || '').trim(); }); return l.length ? l : [{ lo: '', hi: '' }]; }
 
   function analyse(s) {
-    var e = mid(s.entryLo, s.entryHi), sl = num(s.sl), tps = usedTps(s), t = mid(tps[0].lo, tps[0].hi);
+    var e = mid(s.entryLo, s.entryHi), eA=num(s.entryLo), eB=isFinite(num(s.entryHi))?num(s.entryHi):eA;
+    var entryLow=Math.min(eA,eB), entryHigh=Math.max(eA,eB), sl = num(s.sl), tps = usedTps(s), t = mid(tps[0].lo, tps[0].hi);
     var long = s.dir === 'long', out = { ok: false, warn: '' };
     if (!isFinite(e) || !isFinite(sl) || !isFinite(t)) { out.warn = '填写进场、止盈、止损后会计算盈亏比。'; return out; }
     var risk = long ? e - sl : sl - e, reward = long ? t - e : e - t;
-    if (risk <= 0) out.warn = long ? '做多时止损应低于进场价。' : '做空时止损应高于进场价。';
+    if (risk <= 0 || (long ? sl >= entryLow : sl <= entryHigh)) out.warn = long ? '做多时，止损价应低于整个进场区间（低于 ' + fmt(entryLow) + '）。' : '做空时，止损价应高于整个进场区间（高于 ' + fmt(entryHigh) + '）。';
     else {
       for (var i = 0; i < tps.length; i++) {
         var m = mid(tps[i].lo, tps[i].hi);
-        if (isFinite(m) && (long ? m <= e : m >= e)) { out.warn = (tps.length > 1 ? 'TP' + (i + 1) : '止盈') + (long ? '应高于进场价。' : '应低于进场价。'); break; }
+        var ta=num(tps[i].lo), tb=isFinite(num(tps[i].hi))?num(tps[i].hi):ta, targetLow=Math.min(ta,tb), targetHigh=Math.max(ta,tb);
+        if (isFinite(m) && (long ? targetLow <= entryHigh : targetHigh >= entryLow)) { out.warn = (tps.length > 1 ? 'TP' + (i + 1) : '止盈') + (long ? '区间应高于整个进场区间（高于 ' + fmt(entryHigh) + '）。' : '区间应低于整个进场区间（低于 ' + fmt(entryLow) + '）。'); break; }
       }
     }
     if (!out.warn && reward > 0) { out.ok = true; out.rr = reward / risk; out.rewardPct = reward / e * 100; out.riskPct = risk / e * 100; }
