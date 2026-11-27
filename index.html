@@ -1,5 +1,8 @@
 <title>交易单生成器</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#3155d9">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap">
@@ -104,7 +107,7 @@ summary { cursor: pointer; font-size: 14px; font-weight: 500; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chips button { font: inherit; font-size: 13px; font-family: var(--font-num); background: var(--field); color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; cursor: pointer; }
 .stage { position: sticky; top: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-.stage canvas { width: 100%; height: auto; aspect-ratio: 1080 / 1650; display: block; border-radius: 10px; border: 1px solid var(--line); background: #fff; max-width: 100%; }
+.stage canvas { width: 100%; height: auto; aspect-ratio: auto; display: block; border-radius: 10px; border: 1px solid var(--line); background: #fff; max-width: 100%; }
 .actions { display: flex; gap: 8px; }
 .actions .btn { flex: 1; }
 .dock { display: none; }
@@ -242,6 +245,41 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
  .stage canvas { border-radius:14px; }
 }
 @media(max-width:420px) { header { padding:18px; } header h1 { font-size:21px; } .panel,.hist { padding:14px; } }
+
+input[type=password],input[type=search]{font:inherit;width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:var(--field);color:var(--ink)}
+/* ---- v4 additions ---- */
+.kv{display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:5px 0;border-bottom:1px dashed var(--line)}
+.kv span{color:var(--muted)} .kv b{font-family:var(--font-num);font-weight:600;text-align:right;min-width:0;overflow-wrap:anywhere}
+.kv.bad b{color:var(--warn)}
+.calc-hint{font-size:12.5px;color:var(--muted);line-height:1.6;padding:6px 0}
+.calc-out,.suggest{border:1px solid var(--line);border-radius:12px;padding:10px 14px;background:var(--field)}
+.suggest .sg-title{font-weight:700;font-size:14px;margin-bottom:4px}
+.suggest .btn{margin-top:8px}
+.tp.withpct{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,.7fr) 34px}
+.tlink{font:inherit;font-size:13px;color:#3155d9;background:none;border:0;text-decoration:underline;cursor:pointer;padding:0}
+.filebtn{display:inline-flex;align-items:center;cursor:pointer}
+.alert-bar{display:flex;flex-direction:column;gap:6px}
+.alert-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:10px 12px;border-radius:12px;font-size:13px;border:1px solid #b5c4ff;background:#eef2ff;color:#243a8a}
+.alert-row.tp{background:#e8f8f1;border-color:#9ad9bf;color:#0d6b4a}
+.alert-row.sl{background:#fdeeee;border-color:#f0b5b7;color:#a12328}
+.alert-row span{flex:1 1 180px;min-width:0}
+.alert-row button{font:inherit;font-size:12.5px;padding:4px 10px;border-radius:8px;border:1px solid currentColor;background:transparent;color:inherit;cursor:pointer}
+.hfilter{display:flex;gap:8px;flex-wrap:wrap}
+.hfilter input,.hfilter select,.hbtns select{font:inherit;font-size:14px;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--field);color:var(--ink);min-width:0}
+.hfilter input{flex:1 1 200px}
+.tagrow2{display:flex;flex-wrap:wrap;gap:6px}
+.tagchip{font:inherit;font-size:12.5px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);background:var(--field);color:var(--ink);cursor:pointer}
+.tagchip[aria-pressed=true]{background:#3155d9;color:#fff;border-color:#3155d9}
+.sdetail{display:flex;flex-direction:column;gap:6px;font-size:13px}
+.tagrow{display:flex;align-items:center;gap:8px;font-size:12.5px}
+.tagrow .bar{flex:1;height:6px;border-radius:9px;background:var(--line);overflow:hidden}
+.tagrow .bar i{display:block;height:100%;width:var(--w,0%);background:#12a572}
+.hleft{display:flex;gap:8px;align-items:flex-start}
+.chk{margin-top:4px;width:18px;height:18px}
+.hi{grid-template-columns:auto minmax(0,1fr)}
+.pill.tagp{opacity:.85}
+select{font:inherit;font-size:14px;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--field);color:var(--ink);min-width:0;max-width:100%}
+.seg{overflow-x:auto}
 </style>
 
 <main class="wrap">
@@ -272,14 +310,33 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
         <div class="row keep">
           <label class="f">进场区间 起<input type="text" id="entryLo" class="num" inputmode="decimal"></label>
           <label class="f">进场区间 止（可空）<input type="text" id="entryHi" class="num" inputmode="decimal"></label>
+          <label class="f">本档占比 %（分批进场时填）<input type="text" id="entryPct" class="num" inputmode="decimal" placeholder="例如 50"></label>
           <label class="f">止损<input type="text" id="sl" class="num" inputmode="decimal"></label>
           <label class="f">仓位<input type="text" id="size" placeholder="0.3倍 / 10x / 5%"></label>
+          <label class="f">杠杆（估算强平价用，可空）<input type="text" id="lev" class="num" inputmode="decimal" placeholder="例如 10"></label>
         </div>
+        <div id="entList" style="display:flex;flex-direction:column;gap:8px"></div>
+        <div><button type="button" class="btn ghost small" id="btnAddEnt">+ 分批进场（加仓区间）</button></div>
         <div id="tpList" style="display:flex;flex-direction:column;gap:8px"></div>
         <div><button type="button" class="btn ghost small" id="btnAddTp">+ 添加止盈位</button></div>
+        <label class="f">触发条件（可空）<input type="text" id="trigger" placeholder="例如 回踩 1680 不破，15 分钟收阳后进场"></label>
         <p class="op-hint"><strong>怎么填：</strong>单一进场价或止盈价只填“起”，区间才需要填“止”；做多止盈高于进场、止损低于进场，做空则相反。例：做空 1770，跌到 1730 止盈，就把止盈第一格填 1730、第二格留空。</p>
         <div class="warn" id="warn" role="status"></div>
       </fieldset>
+
+      <details id="calc">
+        <summary>仓位计算器</summary>
+        <div class="bn">
+          <div class="row">
+            <label class="f">本金 USDT<input type="text" id="equity" class="num" inputmode="decimal" placeholder="例如 10000"></label>
+            <label class="f">单笔最大亏损 %<input type="text" id="riskPct" class="num" inputmode="decimal" placeholder="1"></label>
+            <label class="f">维持保证金率 %（估算强平用）<input type="text" id="mmr" class="num" inputmode="decimal" placeholder="0.5"></label>
+          </div>
+          <div id="calcOut" class="calc-out"></div>
+          <div class="btns"><button type="button" class="btn ghost small" id="btnCalcFill">填入仓位栏</button></div>
+          <p class="hint">本金只保存在你这台设备的设置里，不会画到图上，也不进历史、导出和云同步。强平价是逐仓近似值，实际以交易所为准。</p>
+        </div>
+      </details>
 
       <fieldset>
         <legend>本单结果</legend>
@@ -300,6 +357,7 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
       <fieldset>
         <legend>文字</legend>
         <label class="f">署名<input type="text" id="author" placeholder="你的昵称"></label>
+        <label class="f">标签（逗号或空格分隔，用于筛选统计）<input type="text" id="tags" placeholder="突破, 回踩, 趋势"></label>
         <label class="f">备注<textarea id="note" rows="2" placeholder="例如：小仓位尝试；打到第一止盈后平七成，剩余挂保本。"></textarea></label>
         <label class="f">风险提示<textarea id="disclaimer" rows="2"></textarea></label>
       </fieldset>
@@ -308,20 +366,66 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
         <legend>样式</legend>
         <div class="row">
           <div class="seg" role="group" aria-label="卡片主题" data-key="theme">
-            <button type="button" data-v="light">浅色卡片</button>
-            <button type="button" data-v="dark">深色卡片</button>
+            <button type="button" data-v="light">浅色</button>
+            <button type="button" data-v="dark">深色</button>
+            <button type="button" data-v="gold">金黑</button>
+            <button type="button" data-v="mono">黑白</button>
           </div>
           <div class="seg" role="group" aria-label="涨跌配色" data-key="redUp">
             <button type="button" data-v="0">绿涨红跌</button>
             <button type="button" data-v="1">红涨绿跌</button>
           </div>
         </div>
+        <div class="row">
+          <div class="seg" role="group" aria-label="卡片语言" data-key="lang">
+            <button type="button" data-v="zh">卡片中文</button>
+            <button type="button" data-v="en">Card English</button>
+          </div>
+        </div>
+        <div class="seg" role="group" aria-label="图片尺寸" data-key="canvasSize">
+          <button type="button" data-v="auto">自动</button><button type="button" data-v="1x1">1:1</button><button type="button" data-v="4x5">4:5</button><button type="button" data-v="9x16">9:16</button><button type="button" data-v="16x9">16:9</button>
+        </div>
         <div class="opts">
           <label><input type="checkbox" id="showMetrics"> 显示盈亏比与幅度</label>
           <label><input type="checkbox" id="showTime"> 显示生成时间</label>
           <label><input type="checkbox" id="showChart"> 有K线时显示K线图</label>
+          <label><input type="checkbox" id="showLiq"> 显示估算强平价</label>
+          <label><input type="checkbox" id="showExtra"> 显示资金费率/持仓量/多空比</label>
+          <label><input type="checkbox" id="showDraft"> 草稿来源标记（规则/AI）</label>
         </div>
       </fieldset>
+
+      <details id="brand">
+        <summary>品牌、二维码与存证</summary>
+        <div class="bn">
+          <div class="btns">
+            <label class="btn ghost small filebtn">上传 Logo<input type="file" id="logoFile" accept="image/png,image/jpeg,image/webp" hidden></label>
+            <button type="button" class="btn ghost small" id="btnLogoClear">移除 Logo</button>
+          </div>
+          <div class="row">
+            <label class="f">二维码内容（链接/文字，可空）<input type="text" id="qrText" class="num" placeholder="https://t.me/你的频道"></label>
+            <label class="f">二维码说明<input type="text" id="qrCaption" placeholder="扫码关注"></label>
+          </div>
+          <label class="f">水印文字（可空）<input type="text" id="watermark" placeholder="例如 @你的昵称"></label>
+          <div class="opts">
+            <label><input type="checkbox" id="showLogo"> 显示 Logo</label>
+            <label><input type="checkbox" id="showQr"> 显示二维码</label>
+            <label><input type="checkbox" id="showWm"> 显示水印</label>
+            <label><input type="checkbox" id="doStamp"> 生成时存证（编号 + 时间）</label>
+          </div>
+          <p class="hint">存证 = 对交易计划算 SHA-256 并生成编号。只有填了你自己的后端地址并由后端盖时间戳，编号才有“当时已存在”的证明力；否则只是以 L 开头的本地编号。</p>
+          <div class="row">
+            <label class="f">预设<select id="presetSel"></select></label>
+            <label class="f">预设名称<input type="text" id="presetName" placeholder="例如 日内模板"></label>
+          </div>
+          <div class="btns">
+            <button type="button" class="btn ghost small" id="btnPresetApply">套用</button>
+            <button type="button" class="btn ghost small" id="btnPresetSave">保存当前为预设</button>
+            <button type="button" class="btn ghost small" id="btnPresetDel">删除</button>
+          </div>
+          <p class="hint">预设保存署名、风险提示、主题、尺寸、显示项、二维码和水印等外观，不含点位、结果和本金。</p>
+        </div>
+      </details>
 
       <details id="bn" open>
         <summary>币安行情与接口</summary>
@@ -339,10 +443,15 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
           <div class="btns">
             <button type="button" class="btn ghost small" id="btnPrice">按现价生成点位</button>
             <button type="button" class="btn ghost small" id="btnKl">加载K线</button>
+            <button type="button" class="btn ghost small" id="btnSuggest">规则草稿</button>
           </div>
+          <div class="opts"><label><input type="checkbox" id="alertOn" checked> 价格提醒（需开启实时刷新）</label><button type="button" class="btn ghost small" id="btnNotify">开启桌面通知</button></div>
+          <div id="suggestOut" class="suggest" hidden></div>
           <p class="op-hint"><strong>行情操作：</strong>先选现货或 U 本位合约，再选 5 分钟或 15 分钟短线周期，点击“加载 K 线”；页面同时显示 1 小时趋势参考。勾选“实时刷新现价”后会每秒更新价格。行情接口不可用时，仍可手动填写点位并生成交易单。</p>
           <label class="f">你的后端地址（读取持仓，可空）<input type="text" id="bnProxy" class="num" placeholder="https://api.example.com/binance"></label>
-          <div class="btns"><button type="button" class="btn ghost small" id="btnPos">导入持仓</button></div>
+          <label class="f">后端访问令牌（APP_TOKEN，存在本机）<input type="password" id="bnToken" class="num" autocomplete="off"></label>
+          <label class="f">给 AI 的补充说明（可空）<input type="text" id="aiHint" placeholder="例如 偏保守，只做回踩"></label>
+          <div class="btns"><button type="button" class="btn ghost small" id="btnPos">导入持仓</button><button type="button" class="btn ghost small" id="btnFills">导入成交为分批平仓</button><button type="button" class="btn ghost small" id="btnAi">AI 起草</button></div>
           <div class="chips" id="posList"></div>
           <p class="hint" id="bstat" role="status">行情用公开接口，不需要密钥；地址失败时会自动尝试备用地址。持仓需要签名，请在你自己的后端用 API Key 请求币安，再提供 <code>GET /positions</code> 返回 JSON。API Secret 不要放进网页。</p>
         </div>
@@ -350,6 +459,7 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
     </form>
 
     <aside class="stage">
+      <div class="alert-bar" id="alertBar" hidden role="alert"></div>
       <div class="live" id="live" hidden></div>
       <canvas id="cv" width="1080" height="1650" aria-label="交易单预览"></canvas>
       <div class="actions">
@@ -357,6 +467,7 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
         <button type="button" class="btn ghost" id="btnSave">保存到历史</button>
         <button type="button" class="btn ghost" id="btnNew">新建</button>
       </div>
+      <div class="actions"><button type="button" class="btn ghost small" id="btnUndo">撤销</button><button type="button" class="btn ghost small" id="btnText">文字版</button></div>
       <div class="toast" id="toast" role="status"></div>
     </aside>
   </div>
@@ -370,10 +481,24 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
         <button type="button" class="btn ghost small" id="btnExpJson">导出备份 JSON</button>
         <button type="button" class="btn ghost small" id="btnImp">导入备份</button>
         <input type="file" id="impFile" accept=".json,application/json" hidden>
+        <button type="button" class="btn ghost small" id="btnSyncUp">上传云端</button>
+        <button type="button" class="btn ghost small" id="btnSyncDown">下载合并</button>
         <button type="button" class="btn ghost small" id="btnClear">清空</button>
       </div>
     </div>
+    <div class="hfilter">
+      <input type="search" id="hq" placeholder="搜索币种、标签、备注…" aria-label="搜索历史">
+      <select id="hres" aria-label="按结果筛选"><option value="all">全部结果</option><option value="pending">进行中</option><option value="win">盈利</option><option value="loss">亏损</option><option value="be">保本</option></select>
+    </div>
+    <div class="tagrow2" id="tagChips"></div>
     <div class="stats" id="stats"></div>
+    <div id="sdetail" class="sdetail"></div>
+    <div class="hbtns">
+      <select id="sumPeriod" aria-label="战绩周期"><option value="week">本周</option><option value="month">本月</option><option value="30d">近 30 天</option><option value="all">全部</option></select>
+      <button type="button" class="btn ghost small" id="btnSummary">生成战绩汇总图</button>
+      <button type="button" class="btn ghost small" id="btnToday">选中今天</button>
+      <button type="button" class="btn ghost small" id="btnBoard">合成长图</button>
+    </div>
     <p class="hint">胜率 = 盈利单 ÷（盈利单 + 亏损单）；保本单单独统计，不计入胜率。保本率 = 保本单 ÷ 已结束交易（盈利、亏损、保本）。</p>
     <div class="hlist" id="hlist"></div>
   </section>
@@ -406,57 +531,76 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
 </div>
 
 <script>
+var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],f={},c=function(t,r){o=function(t){for(var r=new Array(t),e=0;e<t;e+=1){r[e]=new Array(t);for(var n=0;n<t;n+=1)r[e][n]=null}return r}(i=4*e+17),l(0,0),l(i-7,0),l(0,i-7),s(),h(),d(t,r),e>=7&&v(t),null==a&&(a=p(e,n,u)),w(a,r)},l=function(t,r){for(var e=-1;e<=7;e+=1)if(!(t+e<=-1||i<=t+e))for(var n=-1;n<=7;n+=1)r+n<=-1||i<=r+n||(o[t+e][r+n]=0<=e&&e<=6&&(0==n||6==n)||0<=n&&n<=6&&(0==e||6==e)||2<=e&&e<=4&&2<=n&&n<=4)},h=function(){for(var t=8;t<i-8;t+=1)null==o[t][6]&&(o[t][6]=t%2==0);for(var r=8;r<i-8;r+=1)null==o[6][r]&&(o[6][r]=r%2==0)},s=function(){for(var t=B.getPatternPosition(e),r=0;r<t.length;r+=1)for(var n=0;n<t.length;n+=1){var i=t[r],a=t[n];if(null==o[i][a])for(var u=-2;u<=2;u+=1)for(var f=-2;f<=2;f+=1)o[i+u][a+f]=-2==u||2==u||-2==f||2==f||0==u&&0==f}},v=function(t){for(var r=B.getBCHTypeNumber(e),n=0;n<18;n+=1){var a=!t&&1==(r>>n&1);o[Math.floor(n/3)][n%3+i-8-3]=a}for(n=0;n<18;n+=1){a=!t&&1==(r>>n&1);o[n%3+i-8-3][Math.floor(n/3)]=a}},d=function(t,r){for(var e=n<<3|r,a=B.getBCHTypeInfo(e),u=0;u<15;u+=1){var f=!t&&1==(a>>u&1);u<6?o[u][8]=f:u<8?o[u+1][8]=f:o[i-15+u][8]=f}for(u=0;u<15;u+=1){f=!t&&1==(a>>u&1);u<8?o[8][i-u-1]=f:u<9?o[8][15-u-1+1]=f:o[8][15-u-1]=f}o[i-8][8]=!t},w=function(t,r){for(var e=-1,n=i-1,a=7,u=0,f=B.getMaskFunction(r),c=i-1;c>0;c-=2)for(6==c&&(c-=1);;){for(var g=0;g<2;g+=1)if(null==o[n][c-g]){var l=!1;u<t.length&&(l=1==(t[u]>>>a&1)),f(n,c-g)&&(l=!l),o[n][c-g]=l,-1==(a-=1)&&(u+=1,a=7)}if((n+=e)<0||i<=n){n-=e,e=-e;break}}},p=function(t,r,e){for(var n=A.getRSBlocks(t,r),o=b(),i=0;i<e.length;i+=1){var a=e[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var u=0;for(i=0;i<n.length;i+=1)u+=n[i].dataCount;if(o.getLengthInBits()>8*u)throw"code length overflow. ("+o.getLengthInBits()+">"+8*u+")";for(o.getLengthInBits()+4<=8*u&&o.put(0,4);o.getLengthInBits()%8!=0;)o.putBit(!1);for(;!(o.getLengthInBits()>=8*u||(o.put(236,8),o.getLengthInBits()>=8*u));)o.put(17,8);return function(t,r){for(var e=0,n=0,o=0,i=new Array(r.length),a=new Array(r.length),u=0;u<r.length;u+=1){var f=r[u].dataCount,c=r[u].totalCount-f;n=Math.max(n,f),o=Math.max(o,c),i[u]=new Array(f);for(var g=0;g<i[u].length;g+=1)i[u][g]=255&t.getBuffer()[g+e];e+=f;var l=B.getErrorCorrectPolynomial(c),h=k(i[u],l.getLength()-1).mod(l);for(a[u]=new Array(l.getLength()-1),g=0;g<a[u].length;g+=1){var s=g+h.getLength()-a[u].length;a[u][g]=s>=0?h.getAt(s):0}}var v=0;for(g=0;g<r.length;g+=1)v+=r[g].totalCount;var d=new Array(v),w=0;for(g=0;g<n;g+=1)for(u=0;u<r.length;u+=1)g<i[u].length&&(d[w]=i[u][g],w+=1);for(g=0;g<o;g+=1)for(u=0;u<r.length;u+=1)g<a[u].length&&(d[w]=a[u][g],w+=1);return d}(o,n)};f.addData=function(t,r){var e=null;switch(r=r||"Byte"){case"Numeric":e=M(t);break;case"Alphanumeric":e=x(t);break;case"Byte":e=m(t);break;case"Kanji":e=L(t);break;default:throw"mode:"+r}u.push(e),a=null},f.isDark=function(t,r){if(t<0||i<=t||r<0||i<=r)throw t+","+r;return o[t][r]},f.getModuleCount=function(){return i},f.make=function(){if(e<1){for(var t=1;t<40;t++){for(var r=A.getRSBlocks(t,n),o=b(),i=0;i<u.length;i++){var a=u[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var g=0;for(i=0;i<r.length;i++)g+=r[i].dataCount;if(o.getLengthInBits()<=8*g)break}e=t}c(!1,function(){for(var t=0,r=0,e=0;e<8;e+=1){c(!0,e);var n=B.getLostPoint(f);(0==e||t>n)&&(t=n,r=e)}return r}())},f.createTableTag=function(t,r){t=t||2;var e="";e+='<table style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: "+(r=void 0===r?4*t:r)+"px;",e+='">',e+="<tbody>";for(var n=0;n<f.getModuleCount();n+=1){e+="<tr>";for(var o=0;o<f.getModuleCount();o+=1)e+='<td style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: 0px;",e+=" width: "+t+"px;",e+=" height: "+t+"px;",e+=" background-color: ",e+=f.isDark(n,o)?"#000000":"#ffffff",e+=";",e+='"/>';e+="</tr>"}return e+="</tbody>",e+="</table>"},f.createSvgTag=function(t,r,e,n){var o={};"object"==typeof arguments[0]&&(t=(o=arguments[0]).cellSize,r=o.margin,e=o.alt,n=o.title),t=t||2,r=void 0===r?4*t:r,(e="string"==typeof e?{text:e}:e||{}).text=e.text||null,e.id=e.text?e.id||"qrcode-description":null,(n="string"==typeof n?{text:n}:n||{}).text=n.text||null,n.id=n.text?n.id||"qrcode-title":null;var i,a,u,c,g=f.getModuleCount()*t+2*r,l="";for(c="l"+t+",0 0,"+t+" -"+t+",0 0,-"+t+"z ",l+='<svg version="1.1" xmlns="http://www.w3.org/2000/svg"',l+=o.scalable?"":' width="'+g+'px" height="'+g+'px"',l+=' viewBox="0 0 '+g+" "+g+'" ',l+=' preserveAspectRatio="xMinYMin meet"',l+=n.text||e.text?' role="img" aria-labelledby="'+y([n.id,e.id].join(" ").trim())+'"':"",l+=">",l+=n.text?'<title id="'+y(n.id)+'">'+y(n.text)+"</title>":"",l+=e.text?'<description id="'+y(e.id)+'">'+y(e.text)+"</description>":"",l+='<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>',l+='<path d="',a=0;a<f.getModuleCount();a+=1)for(u=a*t+r,i=0;i<f.getModuleCount();i+=1)f.isDark(a,i)&&(l+="M"+(i*t+r)+","+u+c);return l+='" stroke="transparent" fill="black"/>',l+="</svg>"},f.createDataURL=function(t,r){t=t||2,r=void 0===r?4*t:r;var e=f.getModuleCount()*t+2*r,n=r,o=e-r;return I(e,e,function(r,e){if(n<=r&&r<o&&n<=e&&e<o){var i=Math.floor((r-n)/t),a=Math.floor((e-n)/t);return f.isDark(a,i)?0:1}return 1})},f.createImgTag=function(t,r,e){t=t||2,r=void 0===r?4*t:r;var n=f.getModuleCount()*t+2*r,o="";return o+="<img",o+=' src="',o+=f.createDataURL(t,r),o+='"',o+=' width="',o+=n,o+='"',o+=' height="',o+=n,o+='"',e&&(o+=' alt="',o+=y(e),o+='"'),o+="/>"};var y=function(t){for(var r="",e=0;e<t.length;e+=1){var n=t.charAt(e);switch(n){case"<":r+="&lt;";break;case">":r+="&gt;";break;case"&":r+="&amp;";break;case'"':r+="&quot;";break;default:r+=n}}return r};return f.createASCII=function(t,r){if((t=t||1)<2)return function(t){t=void 0===t?2:t;var r,e,n,o,i,a=1*f.getModuleCount()+2*t,u=t,c=a-t,g={"██":"█","█ ":"▀"," █":"▄","  ":" "},l={"██":"▀","█ ":"▀"," █":" ","  ":" "},h="";for(r=0;r<a;r+=2){for(n=Math.floor((r-u)/1),o=Math.floor((r+1-u)/1),e=0;e<a;e+=1)i="█",u<=e&&e<c&&u<=r&&r<c&&f.isDark(n,Math.floor((e-u)/1))&&(i=" "),u<=e&&e<c&&u<=r+1&&r+1<c&&f.isDark(o,Math.floor((e-u)/1))?i+=" ":i+="█",h+=t<1&&r+1>=c?l[i]:g[i];h+="\n"}return a%2&&t>0?h.substring(0,h.length-a-1)+Array(a+1).join("▀"):h.substring(0,h.length-1)}(r);t-=1,r=void 0===r?2*t:r;var e,n,o,i,a=f.getModuleCount()*t+2*r,u=r,c=a-r,g=Array(t+1).join("██"),l=Array(t+1).join("  "),h="",s="";for(e=0;e<a;e+=1){for(o=Math.floor((e-u)/t),s="",n=0;n<a;n+=1)i=1,u<=n&&n<c&&u<=e&&e<c&&f.isDark(o,Math.floor((n-u)/t))&&(i=0),s+=i?g:l;for(o=0;o<t;o+=1)h+=s+"\n"}return h.substring(0,h.length-1)},f.renderTo2dContext=function(t,r){r=r||2;for(var e=f.getModuleCount(),n=0;n<e;n++)for(var o=0;o<e;o++)t.fillStyle=f.isDark(n,o)?"black":"white",t.fillRect(n*r,o*r,r,r)},f};t.stringToBytes=(t.stringToBytesFuncs={default:function(t){for(var r=[],e=0;e<t.length;e+=1){var n=t.charCodeAt(e);r.push(255&n)}return r}}).default,t.createStringToBytes=function(t,r){var e=function(){for(var e=S(t),n=function(){var t=e.read();if(-1==t)throw"eof";return t},o=0,i={};;){var a=e.read();if(-1==a)break;var u=n(),f=n()<<8|n();i[String.fromCharCode(a<<8|u)]=f,o+=1}if(o!=r)throw o+" != "+r;return i}(),n="?".charCodeAt(0);return function(t){for(var r=[],o=0;o<t.length;o+=1){var i=t.charCodeAt(o);if(i<128)r.push(i);else{var a=e[t.charAt(o)];"number"==typeof a?(255&a)==a?r.push(a):(r.push(a>>>8),r.push(255&a)):r.push(n)}}return r}};var r,e,n,o,i,a=1,u=2,f=4,c=8,g={L:1,M:0,Q:3,H:2},l=0,h=1,s=2,v=3,d=4,w=5,p=6,y=7,B=(r=[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]],e=1335,n=7973,i=function(t){for(var r=0;0!=t;)r+=1,t>>>=1;return r},(o={}).getBCHTypeInfo=function(t){for(var r=t<<10;i(r)-i(e)>=0;)r^=e<<i(r)-i(e);return 21522^(t<<10|r)},o.getBCHTypeNumber=function(t){for(var r=t<<12;i(r)-i(n)>=0;)r^=n<<i(r)-i(n);return t<<12|r},o.getPatternPosition=function(t){return r[t-1]},o.getMaskFunction=function(t){switch(t){case l:return function(t,r){return(t+r)%2==0};case h:return function(t,r){return t%2==0};case s:return function(t,r){return r%3==0};case v:return function(t,r){return(t+r)%3==0};case d:return function(t,r){return(Math.floor(t/2)+Math.floor(r/3))%2==0};case w:return function(t,r){return t*r%2+t*r%3==0};case p:return function(t,r){return(t*r%2+t*r%3)%2==0};case y:return function(t,r){return(t*r%3+(t+r)%2)%2==0};default:throw"bad maskPattern:"+t}},o.getErrorCorrectPolynomial=function(t){for(var r=k([1],0),e=0;e<t;e+=1)r=r.multiply(k([1,C.gexp(e)],0));return r},o.getLengthInBits=function(t,r){if(1<=r&&r<10)switch(t){case a:return 10;case u:return 9;case f:case c:return 8;default:throw"mode:"+t}else if(r<27)switch(t){case a:return 12;case u:return 11;case f:return 16;case c:return 10;default:throw"mode:"+t}else{if(!(r<41))throw"type:"+r;switch(t){case a:return 14;case u:return 13;case f:return 16;case c:return 12;default:throw"mode:"+t}}},o.getLostPoint=function(t){for(var r=t.getModuleCount(),e=0,n=0;n<r;n+=1)for(var o=0;o<r;o+=1){for(var i=0,a=t.isDark(n,o),u=-1;u<=1;u+=1)if(!(n+u<0||r<=n+u))for(var f=-1;f<=1;f+=1)o+f<0||r<=o+f||0==u&&0==f||a==t.isDark(n+u,o+f)&&(i+=1);i>5&&(e+=3+i-5)}for(n=0;n<r-1;n+=1)for(o=0;o<r-1;o+=1){var c=0;t.isDark(n,o)&&(c+=1),t.isDark(n+1,o)&&(c+=1),t.isDark(n,o+1)&&(c+=1),t.isDark(n+1,o+1)&&(c+=1),0!=c&&4!=c||(e+=3)}for(n=0;n<r;n+=1)for(o=0;o<r-6;o+=1)t.isDark(n,o)&&!t.isDark(n,o+1)&&t.isDark(n,o+2)&&t.isDark(n,o+3)&&t.isDark(n,o+4)&&!t.isDark(n,o+5)&&t.isDark(n,o+6)&&(e+=40);for(o=0;o<r;o+=1)for(n=0;n<r-6;n+=1)t.isDark(n,o)&&!t.isDark(n+1,o)&&t.isDark(n+2,o)&&t.isDark(n+3,o)&&t.isDark(n+4,o)&&!t.isDark(n+5,o)&&t.isDark(n+6,o)&&(e+=40);var g=0;for(o=0;o<r;o+=1)for(n=0;n<r;n+=1)t.isDark(n,o)&&(g+=1);return e+=Math.abs(100*g/r/r-50)/5*10},o),C=function(){for(var t=new Array(256),r=new Array(256),e=0;e<8;e+=1)t[e]=1<<e;for(e=8;e<256;e+=1)t[e]=t[e-4]^t[e-5]^t[e-6]^t[e-8];for(e=0;e<255;e+=1)r[t[e]]=e;var n={glog:function(t){if(t<1)throw"glog("+t+")";return r[t]},gexp:function(r){for(;r<0;)r+=255;for(;r>=256;)r-=255;return t[r]}};return n}();function k(t,r){if(void 0===t.length)throw t.length+"/"+r;var e=function(){for(var e=0;e<t.length&&0==t[e];)e+=1;for(var n=new Array(t.length-e+r),o=0;o<t.length-e;o+=1)n[o]=t[o+e];return n}(),n={getAt:function(t){return e[t]},getLength:function(){return e.length},multiply:function(t){for(var r=new Array(n.getLength()+t.getLength()-1),e=0;e<n.getLength();e+=1)for(var o=0;o<t.getLength();o+=1)r[e+o]^=C.gexp(C.glog(n.getAt(e))+C.glog(t.getAt(o)));return k(r,0)},mod:function(t){if(n.getLength()-t.getLength()<0)return n;for(var r=C.glog(n.getAt(0))-C.glog(t.getAt(0)),e=new Array(n.getLength()),o=0;o<n.getLength();o+=1)e[o]=n.getAt(o);for(o=0;o<t.getLength();o+=1)e[o]^=C.gexp(C.glog(t.getAt(o))+r);return k(e,0).mod(t)}};return n}var A=function(){var t=[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9],[1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],[2,86,68],[4,43,27],[4,43,19],[4,43,15],[2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],[2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],[2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],[2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],[4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],[2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],[4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],[3,145,115,1,146,116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],[5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12,7,37,13],[5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],[1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],[5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],[3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],[3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,43,15,10,44,16],[4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],[2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],[4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],[6,147,117,4,148,118],[6,73,45,14,74,46],[11,54,24,16,55,25],[30,46,16,2,47,17],[8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16],[10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17],[8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16],[3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16],[7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16],[5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16],[13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16],[17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16],[17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,55,25],[11,45,15,46,46,16],[13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17],[12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16],[6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16],[17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16],[4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16],[20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16],[19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]],r=function(t,r){var e={};return e.totalCount=t,e.dataCount=r,e},e={};return e.getRSBlocks=function(e,n){var o=function(r,e){switch(e){case g.L:return t[4*(r-1)+0];case g.M:return t[4*(r-1)+1];case g.Q:return t[4*(r-1)+2];case g.H:return t[4*(r-1)+3];default:return}}(e,n);if(void 0===o)throw"bad rs block @ typeNumber:"+e+"/errorCorrectionLevel:"+n;for(var i=o.length/3,a=[],u=0;u<i;u+=1)for(var f=o[3*u+0],c=o[3*u+1],l=o[3*u+2],h=0;h<f;h+=1)a.push(r(c,l));return a},e}(),b=function(){var t=[],r=0,e={getBuffer:function(){return t},getAt:function(r){var e=Math.floor(r/8);return 1==(t[e]>>>7-r%8&1)},put:function(t,r){for(var n=0;n<r;n+=1)e.putBit(1==(t>>>r-n-1&1))},getLengthInBits:function(){return r},putBit:function(e){var n=Math.floor(r/8);t.length<=n&&t.push(0),e&&(t[n]|=128>>>r%8),r+=1}};return e},M=function(t){var r=a,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+2<r.length;)t.put(o(r.substring(n,n+3)),10),n+=3;n<r.length&&(r.length-n==1?t.put(o(r.substring(n,n+1)),4):r.length-n==2&&t.put(o(r.substring(n,n+2)),7))}},o=function(t){for(var r=0,e=0;e<t.length;e+=1)r=10*r+i(t.charAt(e));return r},i=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);throw"illegal char :"+t};return n},x=function(t){var r=u,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+1<r.length;)t.put(45*o(r.charAt(n))+o(r.charAt(n+1)),11),n+=2;n<r.length&&t.put(o(r.charAt(n)),6)}},o=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);if("A"<=t&&t<="Z")return t.charCodeAt(0)-"A".charCodeAt(0)+10;switch(t){case" ":return 36;case"$":return 37;case"%":return 38;case"*":return 39;case"+":return 40;case"-":return 41;case".":return 42;case"/":return 43;case":":return 44;default:throw"illegal char :"+t}};return n},m=function(r){var e=f,n=t.stringToBytes(r),o={getMode:function(){return e},getLength:function(t){return n.length},write:function(t){for(var r=0;r<n.length;r+=1)t.put(n[r],8)}};return o},L=function(r){var e=c,n=t.stringToBytesFuncs.SJIS;if(!n)throw"sjis not supported.";!function(){var t=n("友");if(2!=t.length||38726!=(t[0]<<8|t[1]))throw"sjis not supported."}();var o=n(r),i={getMode:function(){return e},getLength:function(t){return~~(o.length/2)},write:function(t){for(var r=o,e=0;e+1<r.length;){var n=(255&r[e])<<8|255&r[e+1];if(33088<=n&&n<=40956)n-=33088;else{if(!(57408<=n&&n<=60351))throw"illegal char at "+(e+1)+"/"+n;n-=49472}n=192*(n>>>8&255)+(255&n),t.put(n,13),e+=2}if(e<r.length)throw"illegal char at "+(e+1)}};return i},D=function(){var t=[],r={writeByte:function(r){t.push(255&r)},writeShort:function(t){r.writeByte(t),r.writeByte(t>>>8)},writeBytes:function(t,e,n){e=e||0,n=n||t.length;for(var o=0;o<n;o+=1)r.writeByte(t[o+e])},writeString:function(t){for(var e=0;e<t.length;e+=1)r.writeByte(t.charCodeAt(e))},toByteArray:function(){return t},toString:function(){var r="";r+="[";for(var e=0;e<t.length;e+=1)e>0&&(r+=","),r+=t[e];return r+="]"}};return r},S=function(t){var r=t,e=0,n=0,o=0,i={read:function(){for(;o<8;){if(e>=r.length){if(0==o)return-1;throw"unexpected end of file./"+o}var t=r.charAt(e);if(e+=1,"="==t)return o=0,-1;t.match(/^\s$/)||(n=n<<6|a(t.charCodeAt(0)),o+=6)}var i=n>>>o-8&255;return o-=8,i}},a=function(t){if(65<=t&&t<=90)return t-65;if(97<=t&&t<=122)return t-97+26;if(48<=t&&t<=57)return t-48+52;if(43==t)return 62;if(47==t)return 63;throw"c:"+t};return i},I=function(t,r,e){for(var n=function(t,r){var e=t,n=r,o=new Array(t*r),i={setPixel:function(t,r,n){o[r*e+t]=n},write:function(t){t.writeString("GIF87a"),t.writeShort(e),t.writeShort(n),t.writeByte(128),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(255),t.writeByte(255),t.writeByte(255),t.writeString(","),t.writeShort(0),t.writeShort(0),t.writeShort(e),t.writeShort(n),t.writeByte(0);var r=a(2);t.writeByte(2);for(var o=0;r.length-o>255;)t.writeByte(255),t.writeBytes(r,o,255),o+=255;t.writeByte(r.length-o),t.writeBytes(r,o,r.length-o),t.writeByte(0),t.writeString(";")}},a=function(t){for(var r=1<<t,e=1+(1<<t),n=t+1,i=u(),a=0;a<r;a+=1)i.add(String.fromCharCode(a));i.add(String.fromCharCode(r)),i.add(String.fromCharCode(e));var f,c,g,l=D(),h=(f=l,c=0,g=0,{write:function(t,r){if(t>>>r!=0)throw"length over";for(;c+r>=8;)f.writeByte(255&(t<<c|g)),r-=8-c,t>>>=8-c,g=0,c=0;g|=t<<c,c+=r},flush:function(){c>0&&f.writeByte(g)}});h.write(r,n);var s=0,v=String.fromCharCode(o[s]);for(s+=1;s<o.length;){var d=String.fromCharCode(o[s]);s+=1,i.contains(v+d)?v+=d:(h.write(i.indexOf(v),n),i.size()<4095&&(i.size()==1<<n&&(n+=1),i.add(v+d)),v=d)}return h.write(i.indexOf(v),n),h.write(e,n),h.flush(),l.toByteArray()},u=function(){var t={},r=0,e={add:function(n){if(e.contains(n))throw"dup key:"+n;t[n]=r,r+=1},size:function(){return r},indexOf:function(r){return t[r]},contains:function(r){return void 0!==t[r]}};return e};return i}(t,r),o=0;o<r;o+=1)for(var i=0;i<t;i+=1)n.setPixel(i,o,e(i,o));var a=D();n.write(a);for(var u=function(){var t=0,r=0,e=0,n="",o={},i=function(t){n+=String.fromCharCode(a(63&t))},a=function(t){if(t<0);else{if(t<26)return 65+t;if(t<52)return t-26+97;if(t<62)return t-52+48;if(62==t)return 43;if(63==t)return 47}throw"n:"+t};return o.writeByte=function(n){for(t=t<<8|255&n,r+=8,e+=1;r>=6;)i(t>>>r-6),r-=6},o.flush=function(){if(r>0&&(i(t<<6-r),t=0,r=0),e%3!=0)for(var o=3-e%3,a=0;a<o;a+=1)n+="="},o.toString=function(){return n},o}(),f=a.toByteArray(),c=0;c<f.length;c+=1)u.writeByte(f[c]);return u.flush(),"data:image/gif;base64,"+u};return t}();qrcode.stringToBytesFuncs["UTF-8"]=function(t){return function(t){for(var r=[],e=0;e<t.length;e++){var n=t.charCodeAt(e);n<128?r.push(n):n<2048?r.push(192|n>>6,128|63&n):n<55296||n>=57344?r.push(224|n>>12,128|n>>6&63,128|63&n):(e++,n=65536+((1023&n)<<10|1023&t.charCodeAt(e)),r.push(240|n>>18,128|n>>12&63,128|n>>6&63,128|63&n))}return r}(t)},function(t){"function"==typeof define&&define.amd?define([],t):"object"==typeof exports&&(module.exports=t())}(function(){return qrcode});
+;try{if(window.qrcode)qrcode.stringToBytes=function(s){return Array.from(new TextEncoder().encode(s));};}catch(e){}
+</script>
+<script>
 (function () {
+  'use strict';
   var $ = function (id) { return document.getElementById(id); };
+  var DEF_DIS_ZH = '以上仅为个人策略记录，不构成投资建议。市场有风险，入市需谨慎。';
+  var DEF_DIS_EN = 'For personal record only. Not investment advice. Markets are risky; trade with caution.';
   var DEFAULTS = {
     symbol: 'ETHUSDT', subtitle: 'USDT 永续', dir: 'long',
-    entryLo: '1670', entryHi: '1690', sl: '1633', size: '0.3倍',
-    tps: [{ lo: '1730', hi: '1750' }],
-    author: '示例署名', note: '风险系数较高，小仓位尝试；打到第一止盈平七成挂保本。',
-    disclaimer: '以上仅为个人策略记录，不构成投资建议。市场有风险，入市需谨慎。',
-    theme: 'light', redUp: '0', showMetrics: true, showTime: true,
-    result: 'pending', resultText: '', exits: [], feeRate: '', showChart: true, kl: null, klTrend: null, market: 'futures', bnIv: '15m',
-    bnBase: 'https://fapi.binance.com', bnProxy: ''
+    entryLo: '1670', entryHi: '1690', entryPct: '', ents: [], sl: '1633', size: '0.3倍', lev: '',
+    tps: [{ lo: '1730', hi: '1750' }], exits: [], feeRate: '',
+    trigger: '', tags: '', author: '示例署名', note: '风险系数较高，小仓位尝试；打到第一止盈平七成挂保本。', disclaimer: DEF_DIS_ZH,
+    theme: 'light', redUp: '0', lang: 'zh', canvasSize: 'auto',
+    showMetrics: true, showTime: true, showChart: true, showLiq: false, showExtra: true, showDraft: true,
+    result: 'pending', resultText: '', draftSrc: '', kl: null, klTrend: null, extra: null, stampId: '', stampTs: '', stampHash: '', ts: '',
+    market: 'futures', bnIv: '15m', bnBase: 'https://fapi.binance.com', bnProxy: '', bnToken: '',
+    equity: '', riskPct: '1', mmr: '0.5', logo: '', qrText: '', qrCaption: '', watermark: '', showLogo: true, showQr: true, showWm: true, doStamp: false
   };
-  var TEXT_IDS = ['symbol','subtitle','entryLo','entryHi','sl','size','author','note','disclaimer','resultText','feeRate','bnBase','bnProxy','bnIv'];
-  var CHECK_IDS = ['showMetrics','showTime','showChart'];
-  var CARD_KEYS = ['symbol','subtitle','dir','entryLo','entryHi','sl','size','tps','exits','feeRate','author','note','disclaimer','theme','redUp','showMetrics','showTime','result','resultText','showChart','kl','klTrend'];
-  var MAX_TP = 5, MAX_HIST = 100;
-  var KEY = 'trade-card-v1', HKEY = 'trade-card-history-v1';
-  var S = {}, hist = [], currentId = null;
+  var CARD_KEYS = ['symbol','subtitle','dir','entryLo','entryHi','entryPct','ents','sl','size','lev','tps','exits','feeRate','trigger','tags','author','note','disclaimer','theme','redUp','lang','canvasSize','showMetrics','showTime','showChart','showLiq','showExtra','showDraft','result','resultText','draftSrc','kl','klTrend','extra','stampId','stampTs','stampHash'];
+  var STR_KEYS = ['symbol','subtitle','entryLo','entryHi','entryPct','sl','size','lev','feeRate','trigger','tags','author','note','disclaimer','resultText','stampId','stampTs','stampHash','ts'];
+  var BOOL_KEYS = ['showMetrics','showTime','showChart','showLiq','showExtra','showDraft'];
+  var ENUMS = { dir: ['long','short'], theme: ['light','dark','gold','mono'], redUp: ['0','1'], lang: ['zh','en'], canvasSize: ['auto','1x1','4x5','9x16','16x9'], result: ['pending','win','loss','be'], draftSrc: ['','rule','ai'] };
+  var TEXT_IDS = ['symbol','subtitle','entryLo','entryHi','entryPct','sl','size','lev','trigger','tags','author','note','disclaimer','resultText','feeRate','equity','riskPct','mmr','qrText','qrCaption','watermark','bnBase','bnProxy','bnToken','bnIv'];
+  var CHECK_IDS = ['showMetrics','showTime','showChart','showLiq','showExtra','showDraft','showLogo','showQr','showWm','doStamp'];
+  var MAX_TP = 5, MAX_ENT = 3, MAX_HIST = 200, MAX_UNDO = 20;
+  var KEY = 'trade-card-v1', HKEY = 'trade-card-history-v1', PKEY = 'trade-card-presets-v1';
+  var LOCAL_HOSTS = ['localhost', '127.0.0.1', '[::1]'];
+  var S = {}, hist = [], currentId = null, presets = {};
 
-  try { S = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { S = {}; }
-  if (!S || typeof S !== 'object' || Array.isArray(S)) S = {};
-  Object.keys(DEFAULTS).forEach(function (k) { if (S[k] === undefined) S[k] = JSON.parse(JSON.stringify(DEFAULTS[k])); });
-  TEXT_IDS.forEach(function(k){if(typeof S[k]!=='string') S[k]=String(DEFAULTS[k]||''); else S[k]=S[k].slice(0,2000);});
-  CHECK_IDS.forEach(function(k){if(typeof S[k]!=='boolean') S[k]=!!DEFAULTS[k];});
-  if (['long','short'].indexOf(S.dir)<0) S.dir=DEFAULTS.dir;
-  if (['light','dark'].indexOf(S.theme)<0) S.theme=DEFAULTS.theme;
-  if (['pending','win','loss','be'].indexOf(S.result)<0) S.result=DEFAULTS.result;
-  if (['spot','futures'].indexOf(S.market)<0) S.market=DEFAULTS.market;
-  if (['5m','15m','1h','4h','1d'].indexOf(S.bnIv)<0) S.bnIv=DEFAULTS.bnIv;
-  if (!Array.isArray(S.tps) || !S.tps.length) S.tps = [{ lo: S.tpLo || '', hi: S.tpHi || '' }];
-  S.tps=S.tps.slice(0,MAX_TP).map(function(t){return {lo:String((t&&t.lo)||'').slice(0,80),hi:String((t&&t.hi)||'').slice(0,80)};});
-  if (!Array.isArray(S.exits)) S.exits = [];
-  S.exits=S.exits.slice(0,20).map(function(x){return {pct:String((x&&x.pct)||'').slice(0,20),price:String((x&&x.price)||'').slice(0,40),be:!!(x&&x.be)};});
-  function validStoredKlines(k){return k&&typeof k==='object'&&typeof k.sym==='string'&&['5m','15m','1h','4h','1d'].indexOf(k.iv)>=0&&['spot','futures'].indexOf(k.mk)>=0&&Array.isArray(k.d)&&k.d.length<=100&&k.d.every(function(c){return Array.isArray(c)&&c.length===4&&c.every(function(v){return typeof v==='number'&&isFinite(v);});});}
-  if(!validStoredKlines(S.kl)) S.kl=null;
-  if(!validStoredKlines(S.klTrend)) S.klTrend=null;
-  delete S.tpLo; delete S.tpHi;
-  if (!Array.isArray(S.exits)) S.exits = [];
-  try { hist = JSON.parse(localStorage.getItem(HKEY) || '[]') || []; } catch (e) { hist = []; }
-  if (!Array.isArray(hist)) hist = [];
-  hist = hist.filter(function (h) { return h && typeof h === 'object' && h.card && typeof h.card === 'object' && typeof h.id === 'string'; }).slice(0, MAX_HIST);
-  hist = hist.filter(function(h){var c=h.card;return c&&typeof c==='object'&&!Array.isArray(c);});
-  hist.forEach(function(h){
-    var c=h.card;
-    ['symbol','subtitle','entryLo','entryHi','sl','size','author','note','disclaimer','resultText','feeRate','ts'].forEach(function(k){if(typeof c[k]!=='string')c[k]='';else c[k]=c[k].slice(0,2000);});
-    if(['long','short'].indexOf(c.dir)<0)c.dir='long'; if(['pending','win','loss','be'].indexOf(c.result)<0)c.result='pending';
-    if(!Array.isArray(c.tps))c.tps=[]; c.tps=c.tps.slice(0,MAX_TP).map(function(t){return {lo:String((t&&t.lo)||'').slice(0,80),hi:String((t&&t.hi)||'').slice(0,80)};});
-    if(!Array.isArray(c.exits))c.exits=[]; c.exits=c.exits.slice(0,20).map(function(x){return {pct:String((x&&x.pct)||'').slice(0,20),price:String((x&&x.price)||'').slice(0,40),be:!!(x&&x.be)};});
-    if(!validStoredKlines(c.kl))c.kl=null; if(!validStoredKlines(c.klTrend))c.klTrend=null;
-    if(typeof h.thumb!=='string'||h.thumb.length>600000||!/^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/.test(h.thumb))h.thumb='';
+  /* ---------- sanitising: one path for settings, history, imports and cloud data ---------- */
+  function validKl(k) { return k && typeof k === 'object' && typeof k.sym === 'string' && ['5m','15m','1h','4h','1d'].indexOf(k.iv) >= 0 && ['spot','futures'].indexOf(k.mk) >= 0 && Array.isArray(k.d) && k.d.length <= 100 && k.d.every(function (c) { return Array.isArray(c) && c.length === 4 && c.every(function (v) { return typeof v === 'number' && isFinite(v); }); }); }
+  function validExtra(x) { return x && typeof x === 'object' && typeof x.sym === 'string' && ['fr','oi','ls'].every(function (f) { return x[f] === null || (typeof x[f] === 'number' && isFinite(x[f])); }); }
+  function cut(v, n) { return String(v === undefined || v === null ? '' : v).slice(0, n); }
+  function cleanCard(r, useDef) {
+    r = r && typeof r === 'object' && !Array.isArray(r) ? r : {};
+    var c = {};
+    STR_KEYS.forEach(function (k) { c[k] = typeof r[k] === 'string' ? r[k].slice(0, 2000) : (useDef && typeof DEFAULTS[k] === 'string' ? DEFAULTS[k] : ''); });
+    BOOL_KEYS.forEach(function (k) { c[k] = typeof r[k] === 'boolean' ? r[k] : (useDef ? DEFAULTS[k] : false); });
+    Object.keys(ENUMS).forEach(function (k) { c[k] = ENUMS[k].indexOf(r[k]) >= 0 ? r[k] : DEFAULTS[k]; });
+    c.tps = (Array.isArray(r.tps) ? r.tps : (useDef ? DEFAULTS.tps : [])).slice(0, MAX_TP).map(function (t) { return { lo: cut(t && t.lo, 80), hi: cut(t && t.hi, 80) }; });
+    if (useDef && !c.tps.length) c.tps = [{ lo: '', hi: '' }];
+    c.ents = (Array.isArray(r.ents) ? r.ents : []).slice(0, MAX_ENT).map(function (t) { return { lo: cut(t && t.lo, 80), hi: cut(t && t.hi, 80), pct: cut(t && t.pct, 20) }; });
+    c.exits = (Array.isArray(r.exits) ? r.exits : []).slice(0, 20).map(function (x) { return { pct: cut(x && x.pct, 20), price: cut(x && x.price, 40), be: !!(x && x.be) }; });
+    c.kl = validKl(r.kl) ? r.kl : null; c.klTrend = validKl(r.klTrend) ? r.klTrend : null; c.extra = validExtra(r.extra) ? r.extra : null;
+    return c;
+  }
+  function cleanSettings(r, out) {
+    r = r && typeof r === 'object' && !Array.isArray(r) ? r : {};
+    out.market = ['spot','futures'].indexOf(r.market) >= 0 ? r.market : DEFAULTS.market;
+    out.bnIv = ['5m','15m','1h','4h','1d'].indexOf(r.bnIv) >= 0 ? r.bnIv : DEFAULTS.bnIv;
+    ['bnBase','bnProxy'].forEach(function (k) { out[k] = typeof r[k] === 'string' ? r[k].slice(0, 300) : DEFAULTS[k]; });
+    out.bnToken = typeof r.bnToken === 'string' ? r.bnToken.slice(0, 300) : '';
+    out.equity = cut(r.equity, 30); out.riskPct = typeof r.riskPct === 'string' ? r.riskPct.slice(0, 10) : DEFAULTS.riskPct; out.mmr = typeof r.mmr === 'string' ? r.mmr.slice(0, 10) : DEFAULTS.mmr;
+    out.logo = typeof r.logo === 'string' && r.logo.length < 220000 && /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(r.logo) ? r.logo : '';
+    out.qrText = cut(r.qrText, 300); out.qrCaption = cut(r.qrCaption, 60); out.watermark = cut(r.watermark, 40);
+    ['showLogo','showQr','showWm'].forEach(function (k) { out[k] = typeof r[k] === 'boolean' ? r[k] : true; });
+    out.doStamp = r.doStamp === true;
+    return out;
+  }
+  var rawS = {}; try { rawS = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { rawS = {}; }
+  S = cleanSettings(rawS, cleanCard(rawS, true));
+  if (rawS && rawS.tpLo !== undefined && !(rawS.tps && rawS.tps.length)) S.tps = [{ lo: cut(rawS.tpLo, 80), hi: cut(rawS.tpHi, 80) }];
+  var rawH = []; try { rawH = JSON.parse(localStorage.getItem(HKEY) || '[]'); } catch (e) { rawH = []; }
+  if (!Array.isArray(rawH)) rawH = [];
+  hist = rawH.filter(function (h) { return h && typeof h === 'object' && typeof h.id === 'string' && h.card && typeof h.card === 'object'; }).slice(0, MAX_HIST).map(function (h) {
+    return { id: h.id.slice(0, 100), card: cleanCard(h.card, false), thumb: typeof h.thumb === 'string' && h.thumb.length < 600000 && /^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/.test(h.thumb) ? h.thumb : '' };
   });
+  try { var rp = JSON.parse(localStorage.getItem(PKEY) || '{}'); if (rp && typeof rp === 'object' && !Array.isArray(rp)) Object.keys(rp).slice(0, 30).forEach(function (n) { if (rp[n] && typeof rp[n] === 'object') presets[n.slice(0, 30)] = rp[n]; }); } catch (e) {}
 
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
   function saveHist() {
@@ -465,32 +609,107 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
       return false;
     }
   }
-  function toast(msg) { $('toast').textContent = msg; }
+  function savePresets() { try { localStorage.setItem(PKEY, JSON.stringify(presets)); return true; } catch (e) { return false; } }
+  function toast(msg, label, fn) {
+    var t = $('toast'); t.textContent = msg;
+    if (label) { var b = document.createElement('button'); b.type = 'button'; b.className = 'tlink'; b.textContent = label; b.addEventListener('click', function () { t.textContent = ''; fn(); }); t.appendChild(document.createTextNode(' ')); t.appendChild(b); }
+  }
 
-  /* ---------- Binance adapter ----------
-     Market data uses public endpoints (no key). Tries your address first, then known backups.
-     positions(): calls YOUR backend, which signs the request with the API key.
-                  Expected JSON: [{symbol, positionAmt, entryPrice, leverage}] (futures positionRisk shape). */
+  /* ---------- helpers ---------- */
+  function num(v) { var s = String(v === undefined || v === null ? '' : v).replace(/,/g, '').trim(); if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(s)) return NaN; var n = Number(s); return isFinite(n) && Math.abs(n) < 1e100 ? n : NaN; }
+  function dec(p) { p = Math.abs(p); return p >= 100 ? 2 : p >= 10 ? 3 : p >= 1 ? 4 : p >= 0.1 ? 5 : p >= 0.01 ? 6 : 8; }
+  function fmt(p) { var n = Number(p); return p !== '' && p !== null && isFinite(n) ? n.toFixed(dec(n)) : '—'; }
+  function compact(n) { n = Number(n); if (!isFinite(n)) return '—'; var a = Math.abs(n); return a >= 1e9 ? (n / 1e9).toFixed(2) + 'B' : a >= 1e6 ? (n / 1e6).toFixed(2) + 'M' : a >= 1e3 ? (n / 1e3).toFixed(2) + 'K' : n.toFixed(a >= 100 ? 1 : 3); }
+  function normSymbol(s) { return String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); }
+  function two(n) { return n < 10 ? '0' + n : '' + n; }
+  function stamp() { var d = new Date(); return d.getFullYear() + '-' + two(d.getMonth() + 1) + '-' + two(d.getDate()) + ' ' + two(d.getHours()) + ':' + two(d.getMinutes()); }
+  function parseTs(ts) { var m = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})/.exec(String(ts || '')); return m ? new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]).getTime() : NaN; }
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+  function snapshot() { var c = {}; CARD_KEYS.forEach(function (k) { c[k] = clone(S[k]); }); return c; }
+  var RESULT_LABEL = { pending: '进行中', win: '盈利', loss: '亏损', be: '保本' };
+  function rangeText(a, b) { a = String(a || '').trim(); b = String(b || '').trim(); return a && b ? a + ' – ' + b : (a || b || '—'); }
+  function mid(lo, hi) { var a = num(lo), b = num(hi); return isFinite(a) && isFinite(b) ? (a + b) / 2 : (isFinite(a) ? a : b); }
+  function usedTps(s) { var l = (s.tps || []).filter(function (t) { return String(t.lo || '').trim() || String(t.hi || '').trim(); }); return l.length ? l : [{ lo: '', hi: '' }]; }
+  /* every entry zone of a plan: the main one plus up to three scale-in zones */
+  function entryList(s) {
+    var l = [{ lo: s.entryLo, hi: s.entryHi, pct: s.entryPct }].concat(s.ents || []);
+    return l.filter(function (e) { return isFinite(num(e.lo)) || isFinite(num(e.hi)); });
+  }
+  function entryBounds(e) { var a = num(e.lo), b = isFinite(num(e.hi)) ? num(e.hi) : a; if (!isFinite(a)) a = b; return [Math.min(a, b), Math.max(a, b)]; }
+  function avgEntry(s) {
+    var l = entryList(s); if (!l.length) return NaN;
+    var w = l.map(function (e) { return num(e.pct); }), useW = l.length > 1 && w.every(function (x) { return x > 0; });
+    var tot = 0, acc = 0;
+    l.forEach(function (e, i) { var m = mid(e.lo, e.hi), k = useW ? w[i] : 1; tot += k; acc += m * k; });
+    return acc / tot;
+  }
+  function liqPrice(s) {
+    var lev = num(s.lev), e = avgEntry(s), mm = num(S.mmr); if (!(lev >= 1) || !isFinite(e)) return NaN;
+    if (!isFinite(mm) || mm < 0 || mm > 20) mm = 0.5;
+    return s.dir === 'long' ? e * (1 - 1 / lev + mm / 100) : e * (1 + 1 / lev - mm / 100);
+  }
+  function analyse(s) {
+    var e = avgEntry(s), sl = num(s.sl), tps = usedTps(s), t = mid(tps[0].lo, tps[0].hi);
+    var long = s.dir === 'long', out = { ok: false, warn: '' }, zones = entryList(s).map(entryBounds);
+    if (!isFinite(e) || !isFinite(sl) || !isFinite(t)) { out.warn = '填写进场、止盈、止损后会计算盈亏比。'; return out; }
+    var entryLow = Math.min.apply(null, zones.map(function (z) { return z[0]; })), entryHigh = Math.max.apply(null, zones.map(function (z) { return z[1]; }));
+    var risk = long ? e - sl : sl - e, reward = long ? t - e : e - t;
+    if (risk <= 0 || (long ? sl >= entryLow : sl <= entryHigh)) out.warn = long ? '做多时，止损价应低于整个进场区间（低于 ' + fmt(entryLow) + '）。' : '做空时，止损价应高于整个进场区间（高于 ' + fmt(entryHigh) + '）。';
+    else {
+      for (var i = 0; i < tps.length; i++) {
+        var m = mid(tps[i].lo, tps[i].hi), b = entryBounds(tps[i]);
+        if (isFinite(m) && (long ? b[0] <= entryHigh : b[1] >= entryLow)) { out.warn = (tps.length > 1 ? 'TP' + (i + 1) : '止盈') + (long ? '区间应高于整个进场区间（高于 ' + fmt(entryHigh) + '）。' : '区间应低于整个进场区间（低于 ' + fmt(entryLow) + '）。'); break; }
+      }
+      var lq = liqPrice(s);
+      if (!out.warn && isFinite(lq) && (long ? sl <= lq : sl >= lq)) out.warn = '止损价已越过估算强平价 ' + fmt(lq) + '，触发止损前可能先被强平，请降低杠杆或收紧止损。';
+    }
+    if (!out.warn && reward > 0) { out.ok = true; out.rr = reward / risk; out.rewardPct = reward / e * 100; out.riskPct = risk / e * 100; }
+    return out;
+  }
+  /* realised result from the partial exits the author typed in (fully closed trades only) */
+  function realized(c) {
+    var entry = avgEntry(c), long = c.dir === 'long', fee = num(c.feeRate); if (!isFinite(fee)) fee = 0;
+    if (!c.exits || !c.exits.length || !(entry > 0)) return null;
+    var alloc = 0, gross = 0, fees = 0;
+    for (var i = 0; i < c.exits.length; i++) {
+      var x = c.exits[i], pct = num(x.pct), price = x.be ? entry : num(x.price);
+      if (!(pct > 0) || !isFinite(price) || price < 0) return null;
+      alloc += pct; gross += (long ? price - entry : entry - price) / entry * pct; fees += fee * pct / 100 * (1 + price / entry);
+    }
+    if (alloc > 100.001 || alloc < 99.99) return null;
+    var net = gross - fees, A = analyse(c);
+    return { net: net, gross: gross, R: A.ok ? net / A.riskPct : null };
+  }
+
+  /* ---------- card text (zh / en) ---------- */
+  var I18N = {
+    zh: { long: '做多', short: '做空', entry: '进场区间', entryN: '进场', size: '仓位', tp: '止盈', sl: '止损', lev: '杠杆', liq: '强平价(估)', rr: '盈亏比', tpSpace: '止盈空间', slSpace: '止损空间', trig: '触发条件', risk: '风险提示', win: '已盈利', loss: '已亏损', be: '已保本', plan: '交易计划', fr: '资金费率', oi: '持仓量', ls: '多空账户比', draftRule: '规则草稿', draftAi: 'AI 草稿', stamped: '已存证', local: '本地编号', trend: '1小时趋势', live: '实时', close: '收盘', realtime: '蓝线为实时价', bars: '根K线', futures: '币安 U 本位', spot: '币安现货', board: '今日交易计划', sum: '战绩汇总' },
+    en: { long: 'LONG', short: 'SHORT', entry: 'Entry', entryN: 'Entry', size: 'Size', tp: 'Take profit', sl: 'Stop loss', lev: 'Leverage', liq: 'Est. liq.', rr: 'Risk/Reward', tpSpace: 'Target', slSpace: 'Risk', trig: 'Trigger', risk: 'Risk', win: 'WIN', loss: 'LOSS', be: 'BREAKEVEN', plan: 'Trade plan', fr: 'Funding', oi: 'Open interest', ls: 'Long/Short', draftRule: 'Rule draft', draftAi: 'AI draft', stamped: 'Timestamped', local: 'Local ID', trend: '1h trend', live: 'Live', close: 'Close', realtime: 'blue line = live price', bars: 'candles', futures: 'Binance USDⓈ-M', spot: 'Binance Spot', board: "Today's trade plans", sum: 'Track record' }
+  };
+  function L(s, k) { return (I18N[s.lang] || I18N.zh)[k] || I18N.zh[k] || k; }
+  function disclaimerText(s) { var d = (s.disclaimer || '').trim(); return s.lang === 'en' && d === DEF_DIS_ZH ? DEF_DIS_EN : d; }
+
+  /* ---------- Binance adapter (public market data) + your own backend (signed / AI / sync) ---------- */
   var BASES = { futures: ['https://fapi.binance.com'], spot: ['https://api.binance.com', 'https://data-api.binance.vision'] };
   var Binance = {
     candidates: function () {
       var custom = String(S.bnBase || '').trim(), list = BASES[S.market] || BASES.futures;
       if (custom) {
         var u; try { u = new URL(custom); } catch (e) { throw new Error('行情地址不是有效 URL'); }
-        var local = ['localhost','127.0.0.1','[::1]'].indexOf(u.hostname) >= 0;
+        var local = LOCAL_HOSTS.indexOf(u.hostname) >= 0;
         if ((u.protocol !== 'https:' && !(local && u.protocol === 'http:')) || u.username || u.password || u.search || u.hash || (u.pathname !== '/' && u.pathname !== '')) throw new Error('行情地址只允许 HTTPS 主机地址；本机可用 HTTP，不能包含路径、账号、参数或片段');
         custom = u.origin;
       }
       var l = (custom ? [custom] : []).concat(list);
       return l.filter(function (x, i) { return x && l.indexOf(x) === i; });
     },
-    get: function (path) {
-      var list; try { list = this.candidates(); } catch (e) { return Promise.reject(e); }
+    get: function (path, fixedBase) {
+      var list; try { list = fixedBase ? [fixedBase] : this.candidates(); } catch (e) { return Promise.reject(e); }
       var i = 0, last = null;
       function next() {
         if (i >= list.length) return Promise.reject(last);
         var b = list[i++];
-        return fetch(b + path, { credentials:'omit', redirect:'error', signal:AbortSignal.timeout(8000) }).then(function (r) { if (r.ok) return r.json(); var e = new Error('HTTP ' + r.status); e.status = r.status; throw e; })
+        return fetch(b + path, { credentials: 'omit', redirect: 'error', signal: AbortSignal.timeout(8000) }).then(function (r) { if (r.ok) return r.json(); var e = new Error('HTTP ' + r.status); e.status = r.status; throw e; })
           .catch(function (e) { last = e; if (e.status === 400) throw e; return next(); });
       }
       return next();
@@ -499,6 +718,7 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
       if (e && e.status === 400) return '交易对不存在，或与所选市场（合约/现货）不符。';
       if (e && (e.status === 451 || e.status === 403)) return '当前地区无法访问币安行情，请更换行情地址。';
       if (e && e.status) return '行情接口返回 ' + e.status + '。';
+      if (e && e.message && /URL|HTTPS|地址/.test(e.message)) return e.message;
       return '无法连接行情地址（网络、地区限制，或预览环境不允许外部请求）。';
     },
     ticker: function (sym) {
@@ -514,127 +734,49 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
         return rows.map(function (k) { return [parseFloat(k[1]), parseFloat(k[2]), parseFloat(k[3]), parseFloat(k[4])]; });
       });
     },
-    positions: function () {
-      if (!S.bnProxy) return Promise.reject(new Error('先填写你的后端地址'));
-      var u;
-      try { u = new URL(String(S.bnProxy || '').trim()); } catch (e) { return Promise.reject(new Error('后端地址必须是有效的 HTTPS URL')); }
-      if (u.protocol !== 'https:' && !(u.protocol === 'http:' && ['localhost','127.0.0.1','[::1]'].indexOf(u.hostname) >= 0)) return Promise.reject(new Error('后端地址仅允许 HTTPS（本机开发可用 HTTP）'));
-      if (u.username || u.password || u.search || u.hash) return Promise.reject(new Error('后端地址不能包含账号、密码、查询参数或片段'));
-      return fetch(u.href.replace(/\/+$/, '') + '/positions', { signal: AbortSignal.timeout(10000), credentials: 'omit', redirect: 'error' })
-        .then(function (r) { if (!r.ok) throw new Error('后端返回 ' + r.status); return r.json(); })
-        .then(function (list) { if (!Array.isArray(list) || list.length > 500) throw new Error('后端持仓数据格式无效或数量过多'); return list.filter(function (p) { return p && typeof p === 'object' && /^[A-Z0-9]{2,30}$/.test(String(p.symbol||'')) && isFinite(parseFloat(p.positionAmt)) && parseFloat(p.positionAmt) !== 0; }); });
+    klinesFrom: function (sym, iv, startMs, n, mk) {
+      var p = (mk || S.market) === 'spot' ? '/api/v3/klines' : '/fapi/v1/klines';
+      return this.get(p + '?symbol=' + encodeURIComponent(sym) + '&interval=' + iv + '&startTime=' + Math.floor(startMs) + '&limit=' + n).then(function (rows) {
+        return rows.map(function (k) { return { t: +k[0], d: [parseFloat(k[1]), parseFloat(k[2]), parseFloat(k[3]), parseFloat(k[4])] }; });
+      });
+    },
+    /* futures only: funding rate, open interest, global long/short account ratio */
+    extra: function (sym) {
+      if (S.market !== 'futures') return Promise.resolve(null);
+      var self = this, f = function (p) { return self.get(p).catch(function () { return null; }); };
+      return Promise.all([f('/fapi/v1/premiumIndex?symbol=' + sym), f('/fapi/v1/openInterest?symbol=' + sym), f('/futures/data/globalLongShortAccountRatio?symbol=' + sym + '&period=1h&limit=1')]).then(function (r) {
+        var fr = r[0] && parseFloat(r[0].lastFundingRate), oi = r[1] && parseFloat(r[1].openInterest), ls = r[2] && r[2][0] && parseFloat(r[2][0].longShortRatio);
+        if (!isFinite(fr) && !isFinite(oi) && !isFinite(ls)) return null;
+        return { sym: sym, fr: isFinite(fr) ? fr * 100 : null, oi: isFinite(oi) ? oi : null, ls: isFinite(ls) ? ls : null };
+      });
     }
   };
+  function backend(path, opt) {
+    var u; opt = opt || {};
+    try { u = new URL(String(S.bnProxy || '').trim()); } catch (e) { return Promise.reject(new Error('先在“币安行情与接口”里填写有效的后端地址')); }
+    if (u.protocol !== 'https:' && !(u.protocol === 'http:' && LOCAL_HOSTS.indexOf(u.hostname) >= 0)) return Promise.reject(new Error('后端地址仅允许 HTTPS（本机开发可用 HTTP）'));
+    if (u.username || u.password || u.search || u.hash) return Promise.reject(new Error('后端地址不能包含账号、密码、查询参数或片段'));
+    var h = { Accept: 'application/json' }; if (S.bnToken) h.Authorization = 'Bearer ' + S.bnToken; if (opt.body) h['Content-Type'] = 'application/json';
+    return fetch(u.href.replace(/\/+$/, '') + path, { method: opt.method || 'GET', headers: h, body: opt.body ? JSON.stringify(opt.body) : undefined, credentials: 'omit', redirect: 'error', signal: AbortSignal.timeout(opt.timeout || 15000) })
+      .then(function (r) { if (!r.ok) { var e = new Error('后端返回 ' + r.status + (r.status === 401 ? '（令牌不对）' : '')); e.status = r.status; throw e; } return r.json(); });
+  }
   var lastTicker = null, liveTimer = null;
 
-  /* ---------- helpers ---------- */
-  function num(v) { var s=String(v===undefined||v===null?'':v).replace(/,/g,'').trim(); if(!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(s)) return NaN; var n=Number(s); return isFinite(n)&&Math.abs(n)<1e100?n:NaN; }
-  function dec(p) { return 2; }
-  function fmt(p) { return isFinite(Number(p)) ? Number(p).toFixed(2) : '—'; }
-  function normSymbol(s) { return String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); }
-  function two(n) { return n < 10 ? '0' + n : '' + n; }
-  function stamp() { var d = new Date(); return d.getFullYear() + '-' + two(d.getMonth() + 1) + '-' + two(d.getDate()) + ' ' + two(d.getHours()) + ':' + two(d.getMinutes()); }
-  function clone(o) { return JSON.parse(JSON.stringify(o)); }
-  function snapshot() { var c = {}; CARD_KEYS.forEach(function (k) { c[k] = clone(S[k]); }); return c; }
-  var RESULT_LABEL = { pending: '进行中', win: '盈利', loss: '亏损', be: '保本' };
 
-  /* ---------- form: text / checks / segs ---------- */
-  TEXT_IDS.forEach(function (id) {
-    var el = $(id); el.value = S[id] || '';
-    el.addEventListener('input', function () { S[id] = el.value; save(); schedule(); if (id === 'entryLo' || id === 'entryHi' || id === 'dir') updateExitSummary(); });
-  });
-  CHECK_IDS.forEach(function (id) {
-    var el = $(id); el.checked = !!S[id];
-    el.addEventListener('change', function () { S[id] = el.checked; save(); schedule(); });
-  });
-  var segPaint = [];
-  Array.prototype.forEach.call(document.querySelectorAll('.seg'), function (seg) {
-    var key = seg.getAttribute('data-key');
-    function paint() { Array.prototype.forEach.call(seg.children, function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-v') === String(S[key]))); }); }
-    seg.addEventListener('click', function (e) {
-      var b = e.target.closest('button'); if (!b) return;
-      S[key] = b.getAttribute('data-v');
-      if (key === 'dir') updateExitSummary();
-      if (key === 'market') { S.bnBase = S.market === 'spot' ? 'https://api.binance.com' : 'https://fapi.binance.com'; $('bnBase').value = S.bnBase; }
-      save(); paint(); schedule();
-    });
-    segPaint.push(paint); paint();
-  });
-  $('form').addEventListener('submit', function (e) { e.preventDefault(); });
-
-  /* ---------- take-profit rows ---------- */
-  function buildTps() {
-    var box = $('tpList'); box.textContent = '';
-    S.tps.forEach(function (t, i) {
-      var row = document.createElement('div'); row.className = 'tp';
-      var tag = document.createElement('div'); tag.className = 'tag'; tag.textContent = S.tps.length > 1 ? 'TP' + (i + 1) : '止盈';
-      function mk(field, ph) {
-        var inp = document.createElement('input'); inp.type = 'text'; inp.className = 'num'; inp.inputMode = 'decimal'; inp.placeholder = ph; inp.value = t[field] || '';
-        inp.id = 'tp' + i + field; inp.setAttribute('aria-label', 'TP' + (i + 1) + (field === 'lo' ? ' 起' : ' 止'));
-        inp.addEventListener('input', function () { t[field] = inp.value; save(); schedule(); });
-        return inp;
-      }
-      var x = document.createElement('button'); x.type = 'button'; x.className = 'x'; x.textContent = '×'; x.setAttribute('aria-label', '删除止盈位');
-      x.disabled = S.tps.length <= 1; x.style.visibility = S.tps.length <= 1 ? 'hidden' : 'visible';
-      x.addEventListener('click', function () { S.tps.splice(i, 1); save(); buildTps(); schedule(); });
-      row.appendChild(tag); row.appendChild(mk('lo', '起')); row.appendChild(mk('hi', '止（可空）')); row.appendChild(x);
-      box.appendChild(row);
-    });
-    $('btnAddTp').hidden = S.tps.length >= MAX_TP;
-  }
-  $('btnAddTp').addEventListener('click', function () { if (S.tps.length < MAX_TP) { S.tps.push({ lo: '', hi: '' }); save(); buildTps(); schedule(); } });
-
-  function updateExitSummary() {
-    var entry=mid(S.entryLo,S.entryHi), long=S.dir==='long', feeInput=num(S.feeRate), fee=isFinite(feeInput)?feeInput:0, allocated=0, gross=0, fees=0, valid=true;
-    S.exits.forEach(function(x){ var pct=num(x.pct), price=x.be?entry:num(x.price); if(!(pct>0)||!isFinite(price)||!isFinite(entry)||price<0){valid=false;return;} allocated+=pct; var move=(long?price-entry:entry-price)/entry; gross+=move*pct; fees+=fee*pct/100*(1+price/entry); });
-    var out=$('exitSummary');
-    if (!S.exits.length) { out.textContent='添加分批平仓后，显示加权盈亏估算。'; return; }
-    function setResult(r){if(S.result===r)return;S.result=r;Array.prototype.forEach.call(document.querySelectorAll('.seg[data-key="result"] button'),function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-v')===r));});save();}
-    if (!valid || allocated>100.001 || !(entry>0) || fee<0 || fee>10) { out.textContent='请检查进场价、平仓比例和平仓价；累计比例不能超过 100%，手续费率需在 0–10% 内。当前合计 '+allocated.toFixed(2)+'%。'; setResult('pending'); return; }
-    var net=gross-fees, left=Math.max(0,100-allocated);
-    out.textContent='已平 '+allocated.toFixed(2)+'% · 剩余 '+left.toFixed(2)+'%'+(left>0.001?'（未计入已实现盈亏）':'（全部平仓）')+'；加权毛收益 '+gross.toFixed(2)+'%'+(fee>0?' · 估算开平仓手续费 '+fees.toFixed(2)+'% · 净收益 '+net.toFixed(2)+'%':' · 净收益 '+net.toFixed(2)+'%（未计手续费/资金费）')+'。收益率按进场名义金额计算，不含杠杆放大。';
-    if (left<=0.001) {
-      var r=net>0.000001?'win':net< -0.000001?'loss':'be';
-      setResult(r);
-    } else setResult('pending');
-  }
-  function exitDetails(c) {
-    return (c.exits||[]).map(function(x){return String(x.pct||'0')+'% @ '+(x.be?'保本价':String(x.price||'—'));}).join('；');
-  }
-  function buildExits() {
-    var box=$('exitList'); box.textContent='';
-    S.exits.forEach(function(x,i){
-      var row=document.createElement('div'); row.className='exit-row';
-      function field(label,key,ph){var wrap=document.createElement('label');wrap.className='f';wrap.textContent=label;var inp=document.createElement('input');inp.type='text';inp.inputMode='decimal';inp.className='num';inp.placeholder=ph||'';inp.value=x[key]||'';inp.addEventListener('input',function(){x[key]=inp.value;updateExitSummary();save();});wrap.appendChild(inp);return {wrap:wrap,input:inp};}
-      var n=document.createElement('div');n.className='tag';n.textContent='平仓 '+(i+1);
-      var q=field('平仓比例 %','pct','50'), p=field('平仓价','price','价格');
-      var be=document.createElement('label');be.className='be-label';var ck=document.createElement('input');ck.type='checkbox';ck.checked=!!x.be;var tx=document.createElement('span');tx.textContent='保本';be.appendChild(ck);be.appendChild(tx);
-      function syncBe(){x.be=ck.checked;p.input.disabled=ck.checked;if(ck.checked){var ep=mid(S.entryLo,S.entryHi);p.input.value=isFinite(ep)?fmt(ep):'';x.price=p.input.value;}updateExitSummary();save();}
-      ck.addEventListener('change',syncBe);
-      var del=document.createElement('button');del.type='button';del.className='del-exit';del.textContent='×';del.setAttribute('aria-label','删除分批平仓');del.addEventListener('click',function(){S.exits.splice(i,1);buildExits();updateExitSummary();save();});
-      p.input.disabled=!!x.be;row.appendChild(n);row.appendChild(q.wrap);row.appendChild(p.wrap);row.appendChild(be);row.appendChild(del);box.appendChild(row);
-    });
-    updateExitSummary();
-  }
-  $('btnAddExit').addEventListener('click',function(){S.exits.push({pct:'',price:'',be:false});buildExits();save();});
-  $('feeRate').addEventListener('input',function(){S.feeRate=this.value;updateExitSummary();save();});
-
-  function syncForm() {
-    TEXT_IDS.forEach(function (id) { $(id).value = S[id] || ''; });
-    CHECK_IDS.forEach(function (id) { $(id).checked = !!S[id]; });
-    segPaint.forEach(function (p) { p(); });
-    buildTps(); buildExits(); save(); schedule();
-  }
-
-  /* ---------- canvas ---------- */
+  /* ================= canvas rendering ================= */
   var cv = $('cv'), ctx = cv.getContext('2d');
-  var W = 1080, H = 1650, P = 72;
+  var P = 72;
   var UI = '"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif';
   var NUM = '"JetBrains Mono","Noto Sans SC","SF Mono",Menlo,monospace';
   var THEMES = {
-    light: { bg: '#ffffff', ink: '#13161b', muted: '#79808b', line: '#e5e8ec', panel: '#f3f5f7' },
-    dark:  { bg: '#0f1216', ink: '#f1f3f5', muted: '#8a919b', line: '#272c33', panel: '#181c22' }
+    light: { bg: '#ffffff', ink: '#13161b', muted: '#79808b', line: '#e5e8ec', panel: '#f3f5f7', accent: '#3155d9' },
+    dark:  { bg: '#0f1216', ink: '#f1f3f5', muted: '#8a919b', line: '#272c33', panel: '#181c22', accent: '#7a9bff' },
+    gold:  { bg: '#0e0d0a', ink: '#f4e7bf', muted: '#a39468', line: '#2f291a', panel: '#1a170f', accent: '#d4af37' },
+    mono:  { bg: '#ffffff', ink: '#000000', muted: '#555555', line: '#000000', panel: '#ffffff', accent: '#000000', stroke: '#000000' }
   };
+  var mcv = document.createElement('canvas'), mctx = mcv.getContext('2d');   // measuring only
+  var logoImg = new Image();
+  function loadLogo() { logoImg.onload = function () { schedule(); }; logoImg.src = S.logo || ''; }
 
   function rr(x, y, w, h, r) {
     ctx.beginPath();
@@ -643,6 +785,7 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
     ctx.lineTo(x + r, y + h); ctx.arcTo(x, y + h, x, y + h - r, r);
     ctx.lineTo(x, y + r); ctx.arcTo(x, y, x + r, y, r); ctx.closePath();
   }
+  function panel(x, y, w, h, r, T) { ctx.fillStyle = T.panel; rr(x, y, w, h, r); ctx.fill(); if (T.stroke) { ctx.strokeStyle = T.stroke; ctx.lineWidth = 2; ctx.stroke(); } }
   function setSpacing(px) { if ('letterSpacing' in ctx) ctx.letterSpacing = px + 'px'; }
   function wrapText(text, maxW, maxLines) {
     var lines = [], cur = '';
@@ -660,36 +803,77 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
     }
     return lines;
   }
-  function rangeText(a, b) { a = String(a || '').trim(); b = String(b || '').trim(); return a && b ? a + ' – ' + b : (a || b || '—'); }
-  function mid(lo, hi) { var a = num(lo), b = num(hi); return isFinite(a) && isFinite(b) ? (a + b) / 2 : (isFinite(a) ? a : b); }
-  function usedTps(s) { var l = (s.tps || []).filter(function (t) { return String(t.lo || '').trim() || String(t.hi || '').trim(); }); return l.length ? l : [{ lo: '', hi: '' }]; }
-
-  function analyse(s) {
-    var e = mid(s.entryLo, s.entryHi), eA=num(s.entryLo), eB=isFinite(num(s.entryHi))?num(s.entryHi):eA;
-    var entryLow=Math.min(eA,eB), entryHigh=Math.max(eA,eB), sl = num(s.sl), tps = usedTps(s), t = mid(tps[0].lo, tps[0].hi);
-    var long = s.dir === 'long', out = { ok: false, warn: '' };
-    if (!isFinite(e) || !isFinite(sl) || !isFinite(t)) { out.warn = '填写进场、止盈、止损后会计算盈亏比。'; return out; }
-    var risk = long ? e - sl : sl - e, reward = long ? t - e : e - t;
-    if (risk <= 0 || (long ? sl >= entryLow : sl <= entryHigh)) out.warn = long ? '做多时，止损价应低于整个进场区间（低于 ' + fmt(entryLow) + '）。' : '做空时，止损价应高于整个进场区间（高于 ' + fmt(entryHigh) + '）。';
-    else {
-      for (var i = 0; i < tps.length; i++) {
-        var m = mid(tps[i].lo, tps[i].hi);
-        var ta=num(tps[i].lo), tb=isFinite(num(tps[i].hi))?num(tps[i].hi):ta, targetLow=Math.min(ta,tb), targetHigh=Math.max(ta,tb);
-        if (isFinite(m) && (long ? targetLow <= entryHigh : targetHigh >= entryLow)) { out.warn = (tps.length > 1 ? 'TP' + (i + 1) : '止盈') + (long ? '区间应高于整个进场区间（高于 ' + fmt(entryHigh) + '）。' : '区间应低于整个进场区间（低于 ' + fmt(entryLow) + '）。'); break; }
-      }
-    }
-    if (!out.warn && reward > 0) { out.ok = true; out.rr = reward / risk; out.rewardPct = reward / e * 100; out.riskPct = risk / e * 100; }
-    return out;
+  function fitFont(text, weight, size, family, maxW, minSize) {
+    var fs = size; ctx.font = weight + ' ' + fs + 'px ' + family;
+    while (ctx.measureText(text).width > maxW && fs > (minSize || 12)) { fs -= 2; ctx.font = weight + ' ' + fs + 'px ' + family; }
+    return fs;
+  }
+  function colors(s) {
+    var long = s.dir === 'long', UPC = String(s.redUp) === '1' ? '#e5484d' : '#12a572', DNC = UPC === '#e5484d' ? '#12a572' : '#e5484d';
+    return { T: THEMES[s.theme] || THEMES.light, long: long, UPC: UPC, DNC: DNC, dirC: long ? UPC : DNC, tpC: long ? UPC : DNC, slC: long ? DNC : UPC };
+  }
+  function canvasDims(s) { return ({ '1x1': [1080, 1080], '4x5': [1080, 1350], '9x16': [1080, 1920], '16x9': [1920, 1080] })[s.canvasSize] || [1080, 0]; }
+  function extraText(s) {
+    var x = s.extra;
+    if (s.showExtra === false || !x || x.sym !== normSymbol(s.symbol)) return '';
+    var p = [];
+    if (x.fr !== null) p.push(L(s, 'fr') + ' ' + (x.fr >= 0 ? '+' : '') + x.fr.toFixed(4) + '%');
+    if (x.oi !== null) p.push(L(s, 'oi') + ' ' + compact(x.oi) + ' ' + x.sym.replace(/USDT$/, ''));
+    if (x.ls !== null) p.push(L(s, 'ls') + ' ' + x.ls.toFixed(2));
+    return p.join('  ·  ');
+  }
+  function stampText(s) {
+    if (!s.stampId) return '';
+    return 'No.' + s.stampId + '  ·  ' + (s.stampTs ? L(s, 'stamped') + ' ' + s.stampTs : L(s, 'local'));
   }
 
-  function drawChart(s, T, UPC, DNC, tpC, slC, tps, eLo, eHi, sl, bx) {
-    var kl = s.kl.d, n = kl.length, axisW = 132;
-    ctx.fillStyle = T.panel; rr(bx.x, bx.y, bx.w, bx.h, 18); ctx.fill();
+  /* ---- header / symbol ---- */
+  function drawHeader(s, C, x, y, w) {
+    var T = C.T, tx = x;
+    if (S.showLogo && S.logo && logoImg.complete && logoImg.naturalWidth) {
+      var lh = 48, lw = Math.min(180, logoImg.naturalWidth / logoImg.naturalHeight * lh);
+      ctx.drawImage(logoImg, x, y + 62, lw, lh); tx = x + lw + 18;
+    }
+    ctx.fillStyle = T.muted; ctx.font = '500 26px ' + UI; setSpacing(3);
+    ctx.fillText((s.author || '').trim() || L(s, 'plan'), tx, y + 104);
+    setSpacing(0);
+    if (s.showTime) { ctx.textAlign = 'right'; ctx.font = '500 24px ' + NUM; ctx.fillText(s.ts || stamp(), x + w, y + 104); ctx.textAlign = 'left'; }
+    ctx.fillStyle = T.line; ctx.fillRect(x, y + 132, w, 2);
+  }
+  function drawSymbol(s, C, x, y, w) {
+    var T = C.T, pillW = 190, pillH = 80, sym = (s.symbol || '').trim() || '—';
+    var size = fitFont(sym, 700, 96, NUM, w - pillW - 30, 44);
+    ctx.fillStyle = T.ink; ctx.fillText(sym, x, y + 110);
+    ctx.fillStyle = T.muted; ctx.font = '500 28px ' + UI;
+    var sub = (s.subtitle || '').trim(); ctx.fillText(sub, x, y + 162);
+    if (s.draftSrc && s.showDraft) {
+      var dt = L(s, s.draftSrc === 'ai' ? 'draftAi' : 'draftRule'), sw = ctx.measureText(sub).width;
+      ctx.font = '600 21px ' + UI; var pw = ctx.measureText(dt).width + 28, px = x + sw + (sub ? 18 : 0);
+      ctx.strokeStyle = T.accent; ctx.lineWidth = 2; rr(px, y + 162 - 28, pw, 36, 18); ctx.stroke();
+      ctx.fillStyle = T.accent; ctx.textAlign = 'center'; ctx.fillText(dt, px + pw / 2, y + 162 - 3); ctx.textAlign = 'left';
+    }
+    ctx.fillStyle = C.dirC; rr(x + w - pillW, y + 48, pillW, pillH, 18); ctx.fill();
+    ctx.fillStyle = '#ffffff'; ctx.font = '700 ' + (s.lang === 'en' ? 32 : 40) + 'px ' + UI; ctx.textAlign = 'center';
+    ctx.fillText(C.long ? L(s, 'long') : L(s, 'short'), x + w - pillW / 2, y + 48 + 54); ctx.textAlign = 'left';
+    if (s.result && s.result !== 'pending') {
+      var rc = s.result === 'win' ? C.UPC : s.result === 'loss' ? C.DNC : T.muted;
+      var rt = L(s, s.result) + ((s.resultText || '').trim() ? '  ' + s.resultText.trim() : '');
+      ctx.font = '700 28px ' + UI; var rw = Math.min(w - 260, ctx.measureText(rt).width + 44);
+      while (ctx.measureText(rt).width > rw - 44 && rt.length > 2) rt = rt.slice(0, -2) + '…';
+      ctx.strokeStyle = rc; ctx.lineWidth = 3; rr(x + w - rw, y + 146, rw, 46, 23); ctx.stroke();
+      ctx.fillStyle = rc; ctx.textAlign = 'center'; ctx.fillText(rt, x + w - rw / 2, y + 179); ctx.textAlign = 'left';
+    }
+  }
+
+  /* ---- candlestick chart with the plan overlaid ---- */
+  function drawChart(s, C, tps, ents, sl, bx, kl, o) {
+    o = o || {};
+    var T = C.T, UPC = C.UPC, DNC = C.DNC, n = kl.d.length, axisW = 132;
+    panel(bx.x, bx.y, bx.w, bx.h, 18, T);
     var px0 = bx.x + 18, px1 = bx.x + bx.w - axisW, py0 = bx.y + 22, py1 = bx.y + bx.h - 34, ph = py1 - py0, pw = px1 - px0;
-    var hi = -Infinity, lo = Infinity;
-    kl.forEach(function (c) { if (c[1] > hi) hi = c[1]; if (c[2] < lo) lo = c[2]; });
-    var live = window.lastTickerForCard;
-    if (live && live.sym === normSymbol(s.symbol) && isFinite(live.price)) { hi = Math.max(hi, live.price); lo = Math.min(lo, live.price); }
+    var hi = -Infinity, lo = Infinity, live = o.live;
+    kl.d.forEach(function (c) { if (c[1] > hi) hi = c[1]; if (c[2] < lo) lo = c[2]; });
+    if (live && isFinite(live.price)) { hi = Math.max(hi, live.price); lo = Math.min(lo, live.price); }
     var span = hi - lo, pad = span * 0.12 || Math.abs(hi || lo) * 0.005 || 1; hi += pad; lo -= pad;
     var Y = function (v) { return py0 + (hi - v) / (hi - lo) * ph; };
     ctx.strokeStyle = T.line; ctx.lineWidth = 1;
@@ -698,184 +882,384 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
       ctx.globalAlpha = g === 4 ? .8 : .45; ctx.beginPath(); ctx.moveTo(px0, gy); ctx.lineTo(px1 + 8, gy); ctx.stroke(); ctx.globalAlpha = 1;
       ctx.fillStyle = T.muted; ctx.font = '500 15px ' + NUM; ctx.textAlign = 'right'; ctx.fillText(fmt(gv), px1 + axisW - 8, gy - 4); ctx.textAlign = 'left';
     }
+    function visible(v) { return isFinite(v) && v >= lo && v <= hi; }
     function zone(a, b, color, alpha) {
       if (!isFinite(a)) return; if (!isFinite(b)) b = a;
-      var y1 = Y(Math.max(a, b)), y2 = Y(Math.min(a, b)); if (y2 - y1 < 4) { var m = (y1 + y2) / 2; y1 = m - 2; y2 = m + 2; }
+      var y1 = Y(Math.min(hi, Math.max(a, b))), y2 = Y(Math.max(lo, Math.min(a, b)));
+      if ((a > hi && b > hi) || (a < lo && b < lo)) return;
+      if (y2 - y1 < 4) { var m = (y1 + y2) / 2; y1 = m - 2; y2 = m + 2; }
       ctx.globalAlpha = alpha; ctx.fillStyle = color; ctx.fillRect(px0, y1, pw + 8, y2 - y1); ctx.globalAlpha = 1;
     }
-    function visible(v) { return isFinite(v) && v >= lo && v <= hi; }
-    zone(visible(eLo) ? eLo : NaN, visible(eHi) ? eHi : NaN, T.ink, 0.12); tps.forEach(function (p) { if (visible(p[0]) || visible(p[1])) zone(visible(p[0]) ? p[0] : p[1], visible(p[1]) ? p[1] : p[0], tpC, 0.18); });
     function hline(v, color, w, dash) { ctx.strokeStyle = color; ctx.lineWidth = w; ctx.setLineDash(dash || []); ctx.beginPath(); ctx.moveTo(px0, Y(v)); ctx.lineTo(px1 + 8, Y(v)); ctx.stroke(); ctx.setLineDash([]); }
-    if (visible(sl)) hline(sl, slC, 3, [12, 8]);
-    var cw = pw / n, bw = Math.max(3, cw * 0.6);
-    kl.forEach(function (c, i) {
-      var cx = px0 + cw * (i + 0.5), col = c[3] >= c[0] ? UPC : DNC;
-      ctx.strokeStyle = col; ctx.lineWidth = Math.max(2, bw * .16); ctx.beginPath(); ctx.moveTo(cx, Y(c[1])); ctx.lineTo(cx, Y(c[2])); ctx.stroke();
-      var yt = Y(Math.max(c[0], c[3])), yb = Y(Math.min(c[0], c[3]));
-      ctx.fillStyle = col; rr(cx - bw / 2, yt, bw, Math.max(3, yb - yt), Math.min(4,bw/3)); ctx.fill();
-    });
-    var last = kl[n - 1][3];
-    if (live && live.sym === normSymbol(s.symbol) && isFinite(live.price)) last = live.price;
-    hline(last, live && live.sym === normSymbol(s.symbol) ? '#2563eb' : T.muted, 3, [5, 5]);
     var labs = [];
-    if (visible(sl)) labs.push({ y: Y(sl), t: '止损 ' + fmt(sl), c: slC, fg: '#ffffff' });
-    else if (isFinite(sl)) {
-      var slY = sl > hi ? py0 + 8 : py1 - 8;
-      ctx.strokeStyle = slC; ctx.lineWidth = 3; ctx.setLineDash([10, 7]); ctx.beginPath(); ctx.moveTo(px0, slY); ctx.lineTo(px1 + 8, slY); ctx.stroke(); ctx.setLineDash([]);
-      labs.push({ y: slY, t: (sl > hi ? '止损 ↑ ' : '止损 ↓ ') + fmt(sl), c: slC, fg: '#ffffff' });
+    if (o.levels !== false) {
+      ents.forEach(function (e) { var b = entryBounds(e); zone(b[0], b[1], T.ink, 0.12); });
+      tps.forEach(function (p) { zone(p[0], p[1], C.tpC, 0.18); });
+      if (visible(sl)) hline(sl, C.slC, 3, [12, 8]);
     }
-    var em = (eLo + (isFinite(eHi) ? eHi : eLo)) / 2; if (visible(em)) labs.push({ y: Y(em), t: '进场 ' + fmt(em), c: T.ink, fg: T.bg });
-    tps.forEach(function (p, i) {
-      var label = tps.length > 1 ? 'TP' + (i + 1) : '止盈';
-      if (visible(p[0])) labs.push({ y: Y(p[0]), t: label + ' ' + fmt(p[0]), c: tpC, fg: '#ffffff' });
-      else if (isFinite(p[0])) {
-        var edgeY = p[0] > hi ? py0 + 8 : py1 - 8;
-        ctx.strokeStyle = tpC; ctx.lineWidth = 3; ctx.setLineDash([8, 6]); ctx.beginPath(); ctx.moveTo(px0, edgeY); ctx.lineTo(px1 + 8, edgeY); ctx.stroke(); ctx.setLineDash([]);
-        labs.push({ y: edgeY, t: label + (p[0] > hi ? ' ↑ ' : ' ↓ ') + fmt(p[0]), c: tpC, fg: '#ffffff' });
-      }
+    var cw = pw / n, bw = Math.max(2, cw * 0.6);
+    kl.d.forEach(function (c, i) {
+      var cx = px0 + cw * (i + 0.5), col = c[3] >= c[0] ? UPC : DNC;
+      ctx.strokeStyle = col; ctx.lineWidth = Math.max(1.5, Math.min(3, bw * .16)); ctx.beginPath(); ctx.moveTo(cx, Y(c[1])); ctx.lineTo(cx, Y(c[2])); ctx.stroke();
+      var yt = Y(Math.max(c[0], c[3])), yb = Y(Math.min(c[0], c[3]));
+      ctx.fillStyle = col; rr(cx - bw / 2, yt, bw, Math.max(2, yb - yt), Math.min(4, bw / 3)); ctx.fill();
     });
-    labs.push({ y: Y(last), t: (live && live.sym === normSymbol(s.symbol) ? '实时 ' : '收盘 ') + fmt(last), c: live && live.sym === normSymbol(s.symbol) ? '#2563eb' : T.muted, fg: '#ffffff' });
+    var last = kl.d[n - 1][3];
+    if (live && isFinite(live.price)) last = live.price;
+    hline(last, live ? '#2563eb' : T.muted, 3, [5, 5]);
+    if (o.levels !== false) {
+      if (visible(sl)) labs.push({ y: Y(sl), t: L(s, 'sl') + ' ' + fmt(sl), c: C.slC, fg: '#ffffff' });
+      else if (isFinite(sl)) {
+        var slY = sl > hi ? py0 + 8 : py1 - 8;
+        ctx.strokeStyle = C.slC; ctx.lineWidth = 3; ctx.setLineDash([10, 7]); ctx.beginPath(); ctx.moveTo(px0, slY); ctx.lineTo(px1 + 8, slY); ctx.stroke(); ctx.setLineDash([]);
+        labs.push({ y: slY, t: L(s, 'sl') + (sl > hi ? ' ↑ ' : ' ↓ ') + fmt(sl), c: C.slC, fg: '#ffffff' });
+      }
+      ents.forEach(function (e, i) { var b = entryBounds(e), em = (b[0] + b[1]) / 2; if (visible(em)) labs.push({ y: Y(em), t: L(s, 'entryN') + (ents.length > 1 ? (i + 1) : '') + ' ' + fmt(em), c: T.ink, fg: T.bg }); });
+      tps.forEach(function (p, i) {
+        var label = tps.length > 1 ? 'TP' + (i + 1) : L(s, 'tp');
+        if (visible(p[0])) labs.push({ y: Y(p[0]), t: label + ' ' + fmt(p[0]), c: C.tpC, fg: '#ffffff' });
+        else if (isFinite(p[0])) {
+          var edgeY = p[0] > hi ? py0 + 8 : py1 - 8;
+          ctx.strokeStyle = C.tpC; ctx.lineWidth = 3; ctx.setLineDash([8, 6]); ctx.beginPath(); ctx.moveTo(px0, edgeY); ctx.lineTo(px1 + 8, edgeY); ctx.stroke(); ctx.setLineDash([]);
+          labs.push({ y: edgeY, t: label + (p[0] > hi ? ' ↑ ' : ' ↓ ') + fmt(p[0]), c: C.tpC, fg: '#ffffff' });
+        }
+      });
+    }
+    labs.push({ y: Y(last), t: (live ? L(s, 'live') : L(s, 'close')) + ' ' + fmt(last), c: live ? '#2563eb' : T.muted, fg: '#ffffff' });
     labs.sort(function (a, b) { return a.y - b.y; });
     for (var i = 0; i < labs.length; i++) labs[i].y = Math.max(py0 + 14, Math.min(py1 - 14, labs[i].y));
-    for (var i = 1; i < labs.length; i++) if (labs[i].y - labs[i - 1].y < 30) labs[i].y = Math.min(py1 - 14, labs[i - 1].y + 30);
+    for (var j = 1; j < labs.length; j++) if (labs[j].y - labs[j - 1].y < 30) labs[j].y = Math.min(py1 - 14, labs[j - 1].y + 30);
     labs.forEach(function (l) {
-      var tw = axisW - 22, fs = 20; ctx.font = '700 ' + fs + 'px ' + NUM;
-      while (ctx.measureText(l.t).width > tw - 12 && fs > 12) { fs--; ctx.font = '700 ' + fs + 'px ' + NUM; }
+      var tw = axisW - 22; fitFont(l.t, 700, 20, NUM, tw - 12, 12);
       ctx.fillStyle = l.c; rr(px1 + 14, l.y - 14, tw, 28, 8); ctx.fill();
-      ctx.fillStyle = l.fg; ctx.textAlign = 'center'; ctx.fillText(l.t, px1 + 14 + tw / 2, l.y + fs * 0.35); ctx.textAlign = 'left';
+      ctx.fillStyle = l.fg; ctx.textAlign = 'center'; ctx.fillText(l.t, px1 + 14 + tw / 2, l.y + 7); ctx.textAlign = 'left';
+    });
+    (o.markers || []).forEach(function (m) {
+      var mx = px0 + cw * (m.i + 0.5), my = Y(m.price);
+      ctx.fillStyle = m.color; ctx.strokeStyle = T.bg; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(mx, my, 9, 0, 6.2832); ctx.fill(); ctx.stroke();
+      ctx.font = '700 18px ' + UI; ctx.textAlign = 'center'; var ty = m.up ? my - 18 : my + 30; ctx.fillStyle = m.color; ctx.fillText(m.text, Math.max(px0 + 30, Math.min(px1 - 30, mx)), ty); ctx.textAlign = 'left';
     });
     ctx.fillStyle = T.muted; ctx.font = '500 18px ' + UI;
-    ctx.fillText((s.symbol || '').trim().toUpperCase() + ' · ' + (s.kl.mk === 'spot' ? '币安现货' : '币安 U 本位') + ' · ' + s.kl.iv + ' · ' + n + ' 根K线' + (live && live.sym === normSymbol(s.symbol) ? ' · 蓝线为实时价' : ''), bx.x + 18, bx.y + bx.h - 10);
-    if (s.kl.iv !== '1h' && s.klTrend && s.klTrend.sym === normSymbol(s.symbol) && s.klTrend.d && s.klTrend.d.length > 1) {
-      var td=s.klTrend.d, first=td[0][0], lastTrend=td[td.length-1][3], diff=(lastTrend-first)/first*100, trendColor=diff>=0?'#12a572':'#e5484d';
-      ctx.fillStyle=trendColor; ctx.font='700 17px '+UI; ctx.textAlign='right'; ctx.fillText('1小时趋势  '+(diff>=0?'↗':'↘')+' '+(diff>=0?'+':'')+diff.toFixed(2)+'%',bx.x+bx.w-18,bx.y+bx.h-10); ctx.textAlign='left';
-    }
+    ctx.fillText((s.symbol || '').trim().toUpperCase() + ' · ' + L(s, kl.mk === 'spot' ? 'spot' : 'futures') + ' · ' + kl.iv + ' · ' + n + ' ' + L(s, 'bars') + (live ? ' · ' + L(s, 'realtime') : ''), bx.x + 18, bx.y + bx.h - 10);
+    if (o.trend) { ctx.fillStyle = o.trend.color; ctx.font = '700 17px ' + UI; ctx.textAlign = 'right'; ctx.fillText(o.trend.text, bx.x + bx.w - 18, bx.y + bx.h - 10); ctx.textAlign = 'left'; }
+  }
+  function trendInfo(s) {
+    var k = s.klTrend; if (!k || !k.d || k.d.length < 2 || s.kl && s.kl.iv === '1h') return null;
+    var diff = (k.d[k.d.length - 1][3] - k.d[0][0]) / k.d[0][0] * 100;
+    return { text: L(s, 'trend') + '  ' + (diff >= 0 ? '↗ +' : '↘ ') + diff.toFixed(2) + '%', color: diff >= 0 ? '#12a572' : '#e5484d' };
   }
 
-  function drawCard(c, s) {
-    ctx = c.getContext('2d');
-    var T = THEMES[s.theme] || THEMES.light;
-    var long = s.dir === 'long';
-    var UPC = String(s.redUp) === '1' ? '#e5484d' : '#12a572';
-    var DNC = UPC === '#e5484d' ? '#12a572' : '#e5484d';
-    var dirC = long ? UPC : DNC, tpC = long ? UPC : DNC, slC = long ? DNC : UPC;
-    var A = analyse(s), tps = usedTps(s), multi = tps.length > 1;
-
-    ctx.clearRect(0, 0, W, H);
-    ctx.fillStyle = T.bg; ctx.fillRect(0, 0, W, H);
-    ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
-
-    // header
-    ctx.fillStyle = T.muted; ctx.font = '500 26px ' + UI; setSpacing(3);
-    ctx.fillText((s.author || '').trim() || '交易计划', P, 104);
-    setSpacing(0);
-    if (s.showTime) { ctx.textAlign = 'right'; ctx.font = '500 24px ' + NUM; ctx.fillText(s.ts || stamp(), W - P, 104); ctx.textAlign = 'left'; }
-    ctx.fillStyle = T.line; ctx.fillRect(P, 132, W - 2 * P, 2);
-
-    // symbol + direction pill
-    var pillW = 190, pillH = 80, sym = (s.symbol || '').trim() || '—';
-    var size = 96; ctx.font = '700 ' + size + 'px ' + NUM;
-    while (ctx.measureText(sym).width > W - 2 * P - pillW - 30 && size > 44) { size -= 4; ctx.font = '700 ' + size + 'px ' + NUM; }
-    ctx.fillStyle = T.ink; ctx.fillText(sym, P, 250);
-    ctx.fillStyle = T.muted; ctx.font = '500 28px ' + UI; ctx.fillText((s.subtitle || '').trim(), P, 302);
-    ctx.fillStyle = dirC; rr(W - P - pillW, 188, pillW, pillH, 18); ctx.fill();
-    ctx.fillStyle = '#ffffff'; ctx.font = '700 40px ' + UI; ctx.textAlign = 'center';
-    ctx.fillText(long ? '做多' : '做空', W - P - pillW / 2, 188 + 54); ctx.textAlign = 'left';
-
-    // result badge (set by the author)
-    if (s.result && s.result !== 'pending') {
-      var rc = s.result === 'win' ? UPC : s.result === 'loss' ? DNC : T.muted;
-      var rt = ({ win: '已盈利', loss: '已亏损', be: '已保本' })[s.result] + ((s.resultText || '').trim() ? '  ' + s.resultText.trim() : '');
-      ctx.font = '700 28px ' + UI; var rw = Math.min(W - 2 * P - 260, ctx.measureText(rt).width + 44);
-      while (ctx.measureText(rt).width > rw - 44 && rt.length > 2) rt = rt.slice(0, -2) + '…';
-      ctx.strokeStyle = rc; ctx.lineWidth = 3; rr(W - P - rw, 286, rw, 46, 23); ctx.stroke();
-      ctx.fillStyle = rc; ctx.textAlign = 'center'; ctx.fillText(rt, W - P - rw / 2, 319); ctx.textAlign = 'left';
-    }
-
-    // price ladder
-    var eLo = num(s.entryLo), eHi = isFinite(num(s.entryHi)) ? num(s.entryHi) : eLo, sl = num(s.sl);
-    var vals = [eLo, eHi, sl], tpNums = tps.map(function (t) { var a = num(t.lo), b = isFinite(num(t.hi)) ? num(t.hi) : a; if (!isFinite(a)) a = b; return [a, b]; });
-    tpNums.forEach(function (p) { vals.push(p[0], p[1]); });
+  /* ---- ladder (when no candles are loaded) ---- */
+  function drawLadder(s, C, tps, ents, sl, x, y, w, h) {
+    var T = C.T, yA = y + Math.round(h * 0.4), vals = [sl];
+    var zones = ents.map(entryBounds), tpZ = tps.map(entryBounds);
+    zones.concat(tpZ).forEach(function (z) { vals.push(z[0], z[1]); });
     vals = vals.filter(isFinite);
-    var yA = 420;
-    var chartOn = s.showChart !== false && s.kl && s.kl.d && s.kl.d.length > 5 && s.kl.sym === normSymbol(s.symbol);
-    var trendOn = chartOn && s.klTrend && s.klTrend.d && s.klTrend.d.length > 5 && s.klTrend.sym === normSymbol(s.symbol);
-    if (chartOn) drawChart(s, T, UPC, DNC, tpC, slC, tpNums, eLo, eHi, sl, { x: P, y: 346, w: W - 2 * P, h: trendOn ? 330 : 470 });
-    if (trendOn) { var shortData=s.kl; s.kl=s.klTrend; drawChart(s,T,UPC,DNC,tpC,slC,[],NaN,NaN,NaN,{x:P,y:690,w:W-2*P,h:300}); s.kl=shortData; }
-    if (!chartOn) { ctx.fillStyle = T.line; rr(P, yA - 2, W - 2 * P, 4, 2); ctx.fill(); }
-    if (!chartOn && vals.length >= 3 && isFinite(eLo) && isFinite(sl) && isFinite(tpNums[0][0])) {
-      var mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals), pad = (mx - mn) * 0.1 || 1;
-      mn -= pad; mx += pad;
-      var X = function (v) { return P + (v - mn) / (mx - mn) * (W - 2 * P); };
-      var band = function (a, b, color) { var x1 = X(Math.min(a, b)), x2 = X(Math.max(a, b)); if (x2 - x1 < 14) { var c0 = (x1 + x2) / 2; x1 = c0 - 7; x2 = c0 + 7; } ctx.fillStyle = color; rr(x1, yA - 15, x2 - x1, 30, 8); ctx.fill(); return (x1 + x2) / 2; };
-      var marks = [[band(sl, sl, slC), '止损', slC], [band(eLo, eHi, T.ink), '进场', T.ink]];
-      tpNums.forEach(function (p, i) { if (isFinite(p[0])) marks.push([band(p[0], p[1], tpC), multi ? 'TP' + (i + 1) : '止盈', tpC]); });
-      ctx.font = '500 24px ' + UI; ctx.textAlign = 'center';
-      marks.forEach(function (m) { var cx = Math.max(P + 36, Math.min(W - P - 36, m[0])); ctx.fillStyle = m[2]; ctx.fillText(m[1], cx, yA + 56); });
-      ctx.textAlign = 'left';
-    }
+    ctx.fillStyle = T.line; rr(x, yA - 2, w, 4, 2); ctx.fill();
+    if (vals.length < 3 || !isFinite(sl) || !zones.length || !isFinite(tpZ[0][0])) return;
+    var mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals), pad = (mx - mn) * 0.1 || 1; mn -= pad; mx += pad;
+    var X = function (v) { return x + (v - mn) / (mx - mn) * w; };
+    var band = function (a, b, color) { var x1 = X(Math.min(a, b)), x2 = X(Math.max(a, b)); if (x2 - x1 < 14) { var c0 = (x1 + x2) / 2; x1 = c0 - 7; x2 = c0 + 7; } ctx.fillStyle = color; rr(x1, yA - 15, x2 - x1, 30, 8); ctx.fill(); return (x1 + x2) / 2; };
+    var marks = [[band(sl, sl, C.slC), L(s, 'sl'), C.slC]];
+    zones.forEach(function (z, i) { marks.push([band(z[0], z[1], T.ink), L(s, 'entryN') + (zones.length > 1 ? ' ' + (i + 1) : ''), T.ink]); });
+    tpZ.forEach(function (z, i) { if (isFinite(z[0])) marks.push([band(z[0], z[1], C.tpC), tps.length > 1 ? 'TP' + (i + 1) : L(s, 'tp'), C.tpC]); });
+    ctx.font = '500 24px ' + UI; ctx.textAlign = 'center';
+    marks.forEach(function (m) { var cx = Math.max(x + 40, Math.min(x + w - 40, m[0])); ctx.fillStyle = m[2]; ctx.fillText(m[1], cx, yA + 56); });
+    ctx.textAlign = 'left';
+  }
 
-    // table
-    var rows = [['进场区间', rangeText(s.entryLo, s.entryHi), T.ink], ['仓位', (s.size || '').trim() || '—', T.ink]];
-    tps.forEach(function (t, i) { rows.push([multi ? '止盈 ' + (i + 1) : '止盈', rangeText(t.lo, t.hi), tpC]); });
-    rows.push(['止损', (s.sl || '').trim() || '—', slC]);
-    var y0 = chartOn ? (trendOn ? 1010 : 836) : 540, rowH = Math.min(58, (chartOn ? 225 : 420) / rows.length);
-    var lf = rowH >= 84 ? 30 : Math.max(22, Math.round(rowH * 0.34)), vf = rowH >= 84 ? 54 : Math.round(rowH * 0.56);
+  /* ---- table / metrics / info / note / footer ---- */
+  function buildRows(s, C, ents, tps, liq) {
+    var T = C.T, rows = [];
+    ents.forEach(function (e, i) { rows.push([ents.length > 1 ? L(s, 'entryN') + ' ' + (i + 1) + (String(e.pct || '').trim() ? ' · ' + String(e.pct).trim() + '%' : '') : L(s, 'entry'), rangeText(e.lo, e.hi), T.ink]); });
+    if (!ents.length) rows.push([L(s, 'entry'), '—', T.ink]);
+    rows.push([L(s, 'size'), (s.size || '').trim() || '—', T.ink]);
+    if (s.showLiq && String(s.lev || '').trim()) rows.push([L(s, 'lev') + (isFinite(liq) ? ' / ' + L(s, 'liq') : ''), String(s.lev).trim() + 'x' + (isFinite(liq) ? '  /  ' + fmt(liq) : ''), T.ink]);
+    tps.forEach(function (t, i) { rows.push([tps.length > 1 ? L(s, 'tp') + ' ' + (i + 1) : L(s, 'tp'), rangeText(t.lo, t.hi), C.tpC]); });
+    rows.push([L(s, 'sl'), (s.sl || '').trim() || '—', C.slC]);
+    return rows;
+  }
+  function drawTable(s, C, rows, x, y, w, rowH) {
+    var T = C.T, lf = rowH >= 84 ? 30 : Math.max(20, Math.round(rowH * 0.34)), vf = rowH >= 84 ? 54 : Math.round(rowH * 0.56);
     rows.forEach(function (r, i) {
-      var y = y0 + i * rowH;
-      ctx.fillStyle = T.line; ctx.fillRect(P, y, W - 2 * P, 2);
-      ctx.fillStyle = T.muted; ctx.font = '500 ' + lf + 'px ' + UI; ctx.fillText(r[0], P, y + rowH / 2 + lf * 0.36);
+      var yy = y + i * rowH;
+      ctx.fillStyle = T.line; ctx.fillRect(x, yy, w, 2);
+      ctx.fillStyle = T.muted; ctx.font = '500 ' + lf + 'px ' + UI; ctx.fillText(r[0], x, yy + rowH / 2 + lf * 0.36);
+      var lw = ctx.measureText(r[0]).width;
       ctx.fillStyle = r[2]; ctx.textAlign = 'right';
-      var fs = vf; ctx.font = '700 ' + fs + 'px ' + NUM;
-      while (ctx.measureText(r[1]).width > W - 2 * P - 220 && fs > 24) { fs -= 2; ctx.font = '700 ' + fs + 'px ' + NUM; }
-      ctx.fillText(r[1], W - P, y + rowH / 2 + fs * 0.36); ctx.textAlign = 'left';
+      var fs = fitFont(r[1], 700, vf, NUM, w - lw - 40, 20);
+      ctx.fillText(r[1], x + w, yy + rowH / 2 + fs * 0.36); ctx.textAlign = 'left';
     });
-    var yEnd = y0 + rows.length * rowH;
-    ctx.fillStyle = T.line; ctx.fillRect(P, yEnd, W - 2 * P, 2);
-
-    // metrics
-    var yN = yEnd + 18;
-    if (s.showMetrics) {
-      var mW = W - 2 * P, mH = 104;
-      ctx.fillStyle = T.panel; rr(P, yN, mW, mH, 20); ctx.fill();
-      var cells = [
-        ['盈亏比' + (multi ? ' · TP1' : ''), A.ok ? '1 : ' + A.rr.toFixed(2) : '—', T.ink],
-        ['止盈空间' + (multi ? ' · TP1' : ''), A.ok ? '+' + A.rewardPct.toFixed(2) + '%' : '—', tpC],
-        ['止损空间', A.ok ? '−' + A.riskPct.toFixed(2) + '%' : '—', slC]
-      ];
-      cells.forEach(function (c, i) {
-        var cx = P + mW / 6 + i * mW / 3;
-        ctx.textAlign = 'center'; ctx.fillStyle = T.muted; ctx.font = '500 21px ' + UI; ctx.fillText(c[0], cx, yN + 36);
-        ctx.fillStyle = c[2]; ctx.font = '700 36px ' + NUM; ctx.fillText(c[1], cx, yN + 82);
+    ctx.fillStyle = T.line; ctx.fillRect(x, y + rows.length * rowH, w, 2);
+  }
+  function drawMetrics(s, C, A, multi, x, y, w) {
+    var T = C.T, h = 104; panel(x, y, w, h, 20, T);
+    var tag = multi ? ' · TP1' : '';
+    var cells = [[L(s, 'rr') + tag, A.ok ? '1 : ' + A.rr.toFixed(2) : '—', T.ink], [L(s, 'tpSpace') + tag, A.ok ? '+' + A.rewardPct.toFixed(2) + '%' : '—', C.tpC], [L(s, 'slSpace'), A.ok ? '−' + A.riskPct.toFixed(2) + '%' : '—', C.slC]];
+    cells.forEach(function (c, i) {
+      var cx = x + w / 6 + i * w / 3;
+      ctx.textAlign = 'center'; ctx.fillStyle = T.muted; ctx.font = '500 21px ' + UI; ctx.fillText(c[0], cx, y + 36);
+      ctx.fillStyle = c[2]; ctx.font = '700 36px ' + NUM; ctx.fillText(c[1], cx, y + 82);
+    });
+    ctx.textAlign = 'left';
+  }
+  function triggerLines(s, w) { var t = (s.trigger || '').trim(); if (!t) return null; ctx.font = '400 26px ' + UI; return wrapText(L(s, 'trig') + '：' + t, w - 36, 2); }
+  function infoHeight(s, w) {
+    var h = 0, tl = triggerLines(s, w); if (tl) h += tl.length * 36 + 24 + 12;
+    if (extraText(s)) h += 40;
+    return h;
+  }
+  function drawInfo(s, C, x, y, w) {
+    var T = C.T, tl = triggerLines(s, w), yy = y;
+    if (tl) {
+      var h = tl.length * 36 + 24; panel(x, yy, w, h, 14, T);
+      var pre = L(s, 'trig') + '：';
+      tl.forEach(function (ln, i) {
+        var bx = x + 18, by = yy + 34 + i * 36;
+        if (i === 0 && ln.indexOf(pre) === 0) { ctx.fillStyle = T.accent; ctx.font = '700 26px ' + UI; ctx.fillText(pre, bx, by); var pw = ctx.measureText(pre).width; ctx.fillStyle = T.ink; ctx.font = '400 26px ' + UI; ctx.fillText(ln.slice(pre.length), bx + pw, by); }
+        else { ctx.fillStyle = T.ink; ctx.font = '400 26px ' + UI; ctx.fillText(ln, bx, by); }
       });
-      ctx.textAlign = 'left';
-      yN += mH + 32;
+      yy += h + 12;
     }
+    var ex = extraText(s);
+    if (ex) { ctx.fillStyle = T.muted; ctx.font = '500 22px ' + NUM; var fs = fitFont(ex, 500, 22, NUM, w, 14); ctx.fillText(ex, x, yy + 28); }
+  }
+  function noteLines(s, w) { var n = (s.note || '').trim(); if (!n) return null; ctx.font = '400 26px ' + UI; return wrapText(n, w - 36, 2); }
+  function noteHeight(s, w) { var l = noteLines(s, w); return l ? l.length * 36 + 24 + 16 : 0; }
+  function drawNote(s, C, x, y, w) {
+    var l = noteLines(s, w), T = C.T; if (!l) return;
+    panel(x, y, w, l.length * 36 + 24, 14, T);
+    ctx.fillStyle = T.ink; ctx.font = '400 26px ' + UI; l.forEach(function (ln, i) { ctx.fillText(ln, x + 18, y + 34 + i * 36); });
+  }
+  var qrCache = {};
+  function qrMatrix(text) {
+    if (qrCache[text]) return qrCache[text];
+    try { var q = qrcode(0, 'M'); q.addData(text); q.make(); var n = q.getModuleCount(), m = []; for (var r = 0; r < n; r++) { m.push([]); for (var c = 0; c < n; c++) m[r].push(q.isDark(r, c)); } qrCache[text] = m; return m; } catch (e) { return null; }
+  }
+  function hasQr() { return !!(S.showQr && S.qrText && S.qrText.trim()); }
+  function footerHeight(s, w) { return hasQr() ? 170 : 130; }
+  function drawFooter(s, C, x, y, w) {
+    var T = C.T, qrOn = hasQr(), tw = w - (qrOn ? 150 : 0);
+    ctx.fillStyle = T.line; ctx.fillRect(x, y, w, 2);
+    var dis = disclaimerText(s);
+    if (dis) { ctx.fillStyle = T.muted; ctx.font = '400 21px ' + UI; wrapText(L(s, 'risk') + (s.lang === 'en' ? ': ' : '：') + dis.replace(/^风险提示[:：]?/, ''), tw, 2).forEach(function (ln, i) { ctx.fillText(ln, x, y + 42 + i * 30); }); }
+    var st = stampText(s); if (st) { ctx.fillStyle = T.muted; ctx.font = '500 18px ' + NUM; ctx.fillText(st, x, y + 112); }
+    if (qrOn) {
+      var m = qrMatrix(S.qrText.trim());
+      if (m) {
+        var size = 112, cell = Math.floor(size / m.length) || 1, real = cell * m.length, qx = x + w - real - 6, qy = y + 16;
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(qx - 6, qy - 6, real + 12, real + 12); ctx.fillStyle = '#000000';
+        for (var r = 0; r < m.length; r++) for (var c = 0; c < m.length; c++) if (m[r][c]) ctx.fillRect(qx + c * cell, qy + r * cell, cell, cell);
+        var cap = (S.qrCaption || '').trim(); if (cap) { ctx.fillStyle = T.muted; ctx.font = '500 16px ' + UI; ctx.textAlign = 'center'; ctx.fillText(cap, qx + real / 2, qy + real + 26); ctx.textAlign = 'left'; }
+      }
+    }
+  }
+  function drawWatermark(C, W, H) {
+    var t = (S.watermark || '').trim(); if (!S.showWm || !t) return;
+    ctx.save(); ctx.globalAlpha = 0.07; ctx.fillStyle = C.T.ink; ctx.font = '700 44px ' + UI;
+    ctx.translate(W / 2, H / 2); ctx.rotate(-0.42);
+    var step = ctx.measureText(t).width + 180, diag = Math.hypot(W, H);
+    for (var yy = -diag; yy < diag; yy += 230) for (var xx = -diag + ((yy / 230) % 2 ? step / 2 : 0); xx < diag; xx += step) ctx.fillText(t, xx, yy);
+    ctx.restore();
+  }
 
-    // note
-    var note = (s.note || '').trim();
-    if (note) {
-      ctx.fillStyle = T.ink; ctx.font = '400 28px ' + UI;
-      var noteTop = yN + 24, noteBottom = 1510, noteLines = wrapText(note, W - 2 * P, 2);
-      ctx.fillStyle = T.panel; rr(P, noteTop - 10, W - 2 * P, Math.min(88, noteLines.length * 38 + 20), 14); ctx.fill();
-      ctx.fillStyle = T.ink; ctx.font = '400 26px ' + UI;
-      noteLines.forEach(function (ln, i) { var baseline = noteTop + 28 + i * 36; if (baseline <= noteBottom) ctx.fillText(ln, P + 18, baseline); });
+  /* ---- the card ---- */
+  function drawCard(c, s) {
+    var C = colors(s), T = C.T, A = analyse(s), tps = usedTps(s), multi = tps.length > 1, ents = entryList(s);
+    var dims = canvasDims(s), W = dims[0], Hfix = dims[1], land = W > 1500;
+    var sym = normSymbol(s.symbol);
+    var chartOn = s.showChart !== false && s.kl && s.kl.d && s.kl.d.length > 5 && s.kl.sym === sym;
+    var trendOn = chartOn && s.klTrend && s.klTrend.d && s.klTrend.d.length > 5 && s.klTrend.sym === sym;
+    var liq = liqPrice(s), rows = buildRows(s, C, ents, tps, liq);
+    var live = c === cv && lastTicker && lastTicker.sym === sym ? lastTicker : null;
+    var slv = num(s.sl), tpNums = tps.map(entryBounds), headH = 140, symH = 216, gap = 22;
+    var metricsH = s.showMetrics ? 104 + gap : 0;
+    var colW = land ? 840 : W - 2 * P, fullW = W - 2 * P;
+    ctx = mctx;
+    var infoH = infoHeight(s, fullW), noteH = noteHeight(s, fullW), footH = footerHeight(s, fullW);
+    var H, rowH = 76, chartH = 150, y;
+    var chartParts = function (bx) {
+      var hh = bx.h;
+      if (trendOn && hh >= 600) {
+        var h1 = Math.round(hh * 0.58) - 7, h2 = hh - h1 - 14;
+        drawChart(s, C, tpNums, ents, slv, { x: bx.x, y: bx.y, w: bx.w, h: h1 }, s.kl, { live: live });
+        drawChart(s, C, [], [], NaN, { x: bx.x, y: bx.y + h1 + 14, w: bx.w, h: h2 }, s.klTrend, { levels: false, trend: trendInfo(s) });
+      } else drawChart(s, C, tpNums, ents, slv, bx, s.kl, { live: live, trend: trendInfo(s) });
+    };
+    if (!land) {
+      var fixedRest = headH + symH + gap + metricsH + infoH + noteH + footH + 70;
+      var tableH = function (rh) { return rows.length * rh + 2 + gap; };
+      if (!Hfix) { chartH = chartOn ? (trendOn ? 660 : 470) : 150; H = fixedRest + chartH + gap + tableH(rowH); }
+      else {
+        H = Hfix;
+        var rest = function (rh) { return H - fixedRest - gap - tableH(rh); };
+        if (chartOn) { while (rest(rowH) < 220 && rowH > 46) rowH -= 4; chartH = Math.max(160, Math.min(800, rest(rowH))); }
+        else { chartH = 150; var spare = rest(rowH) - chartH; if (spare > 0) rowH = Math.min(100, rowH + Math.floor(spare / rows.length)); }
+      }
+      c.width = W; c.height = H; ctx = c.getContext('2d');
+      ctx.fillStyle = T.bg; ctx.fillRect(0, 0, W, H); ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
+      y = 0;
+      drawHeader(s, C, P, y, fullW); y += headH;
+      drawSymbol(s, C, P, y, fullW); y += symH;
+      if (chartOn) chartParts({ x: P, y: y, w: fullW, h: chartH }); else drawLadder(s, C, tps, ents, slv, P, y, fullW, chartH);
+      y += chartH + gap;
+      drawTable(s, C, rows, P, y, fullW, rowH); y += rows.length * rowH + 2 + gap;
+      if (s.showMetrics) { drawMetrics(s, C, A, multi, P, y, fullW); y += 104 + gap; }
+      if (infoH) { drawInfo(s, C, P, y, fullW); y += infoH; }
+      if (noteH) { drawNote(s, C, P, y, fullW); y += noteH; }
+      drawFooter(s, C, P, Hfix ? H - footH - 48 : y + 20, fullW);
+    } else {
+      H = Hfix; c.width = W; c.height = H;
+      var stripH = infoH + noteH + footH + 20, stripY = H - stripH - 30, leftX = P, rightX = P + colW + 48, rightW = W - rightX - P;
+      var tblAvail = stripY - (headH + symH) - metricsH - 24;
+      rowH = Math.max(40, Math.min(84, Math.floor(tblAvail / rows.length)));
+      ctx = c.getContext('2d'); ctx.fillStyle = T.bg; ctx.fillRect(0, 0, W, H); ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
+      drawHeader(s, C, leftX, 0, colW); drawSymbol(s, C, leftX, headH, colW);
+      y = headH + symH; drawTable(s, C, rows, leftX, y, colW, rowH); y += rows.length * rowH + 2 + gap;
+      if (s.showMetrics) drawMetrics(s, C, A, multi, leftX, y, colW);
+      var cTop = 56, cH = stripY - cTop - 24;
+      if (chartOn) chartParts({ x: rightX, y: cTop, w: rightW, h: cH }); else drawLadder(s, C, tps, ents, slv, rightX, cTop + Math.round(cH / 2) - 60, rightW, 150);
+      y = stripY; if (infoH) { drawInfo(s, C, P, y, fullW); y += infoH; } if (noteH) { drawNote(s, C, P, y, fullW); y += noteH; }
+      drawFooter(s, C, P, H - footH - 30, fullW);
     }
-
-    // footer
-    ctx.fillStyle = T.line; ctx.fillRect(P, 1540, W - 2 * P, 2);
-    var dis = (s.disclaimer || '').trim();
-    if (dis) {
-      ctx.fillStyle = T.muted; ctx.font = '400 21px ' + UI;
-      wrapText('风险提示：' + dis.replace(/^风险提示[:：]?/, ''), W - 2 * P, 2).forEach(function (ln, i) { ctx.fillText(ln, P, 1582 + i * 30); });
-    }
+    drawWatermark(C, W, H);
     return A;
   }
-  function draw() {
-    window.lastTickerForCard = lastTicker;
-    var A = drawCard(cv, S); $('warn').textContent = A.warn;
-    renderLive(lastTicker && lastTicker.sym === normSymbol(S.symbol) ? lastTicker : null);
+
+
+  /* ================= form ================= */
+  var undoStack = [];
+  function pushUndo() { undoStack.push({ snap: snapshot(), id: currentId }); if (undoStack.length > MAX_UNDO) undoStack.shift(); $('btnUndo').disabled = false; }
+  $('btnUndo').disabled = true;
+  $('btnUndo').addEventListener('click', function () {
+    var u = undoStack.pop(); if (!u) { toast('没有可撤销的操作。'); return; }
+    CARD_KEYS.forEach(function (k) { S[k] = clone(u.snap[k]); }); currentId = u.id; syncForm();
+    $('btnUndo').disabled = !undoStack.length; toast('已撤销上一步。');
+  });
+
+  TEXT_IDS.forEach(function (id) {
+    var el = $(id); el.value = S[id] || '';
+    el.addEventListener('input', function () {
+      S[id] = el.value; save(); schedule();
+      if (id === 'symbol') markCoins();
+      if (['entryLo', 'entryHi', 'entryPct', 'sl', 'lev', 'equity', 'riskPct', 'mmr'].indexOf(id) >= 0) updateCalc();
+      if (id === 'entryLo' || id === 'entryHi') updateExitSummary();
+    });
+  });
+  CHECK_IDS.forEach(function (id) {
+    var el = $(id); el.checked = !!S[id];
+    el.addEventListener('change', function () { S[id] = el.checked; save(); schedule(); });
+  });
+  var segPaint = [];
+  Array.prototype.forEach.call(document.querySelectorAll('.seg'), function (seg) {
+    var key = seg.getAttribute('data-key');
+    function paint() { Array.prototype.forEach.call(seg.children, function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-v') === String(S[key]))); }); }
+    seg.addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      S[key] = b.getAttribute('data-v');
+      if (key === 'dir') { updateExitSummary(); updateCalc(); }
+      if (key === 'market') { S.bnBase = S.market === 'spot' ? 'https://api.binance.com' : 'https://fapi.binance.com'; $('bnBase').value = S.bnBase; }
+      save(); paint(); schedule();
+    });
+    segPaint.push(paint); paint();
+  });
+  $('form').addEventListener('submit', function (e) { e.preventDefault(); });
+
+  /* ---- take-profit rows ---- */
+  function listRows(box, arr, max, opts) {
+    box.textContent = '';
+    arr.forEach(function (t, i) {
+      var row = document.createElement('div'); row.className = 'tp' + (opts.pct ? ' withpct' : '');
+      var tag = document.createElement('div'); tag.className = 'tag'; tag.textContent = opts.tag(i, arr.length);
+      function mk(field, ph) {
+        var inp = document.createElement('input'); inp.type = 'text'; inp.className = 'num'; inp.inputMode = 'decimal'; inp.placeholder = ph; inp.value = t[field] || '';
+        inp.id = opts.id + i + field; inp.setAttribute('aria-label', opts.tag(i, arr.length) + ' ' + ph);
+        inp.addEventListener('input', function () { t[field] = inp.value; save(); schedule(); updateCalc(); });
+        return inp;
+      }
+      var x = document.createElement('button'); x.type = 'button'; x.className = 'x'; x.textContent = '×'; x.setAttribute('aria-label', '删除');
+      x.disabled = !opts.removable(arr.length); x.style.visibility = x.disabled ? 'hidden' : 'visible';
+      x.addEventListener('click', function () { pushUndo(); arr.splice(i, 1); save(); opts.rebuild(); schedule(); updateCalc(); });
+      row.appendChild(tag); row.appendChild(mk('lo', '起')); row.appendChild(mk('hi', '止（可空）')); if (opts.pct) row.appendChild(mk('pct', '占比 %')); row.appendChild(x);
+      box.appendChild(row);
+    });
   }
+  function buildTps() {
+    listRows($('tpList'), S.tps, MAX_TP, { id: 'tp', pct: false, tag: function (i, n) { return n > 1 ? 'TP' + (i + 1) : '止盈'; }, removable: function (n) { return n > 1; }, rebuild: buildTps });
+    $('btnAddTp').hidden = S.tps.length >= MAX_TP;
+  }
+  function buildEnts() {
+    listRows($('entList'), S.ents, MAX_ENT, { id: 'ent', pct: true, tag: function (i) { return '加仓进场 ' + (i + 1); }, removable: function () { return true; }, rebuild: buildEnts });
+    $('btnAddEnt').hidden = S.ents.length >= MAX_ENT;
+  }
+  $('btnAddTp').addEventListener('click', function () { if (S.tps.length < MAX_TP) { S.tps.push({ lo: '', hi: '' }); save(); buildTps(); schedule(); } });
+  $('btnAddEnt').addEventListener('click', function () { if (S.ents.length < MAX_ENT) { S.ents.push({ lo: '', hi: '', pct: '' }); save(); buildEnts(); schedule(); } });
+
+  /* ---- partial exits (kept from your version; entry price is now the weighted average of all entry zones) ---- */
+  function updateExitSummary() {
+    var entry = avgEntry(S), long = S.dir === 'long', feeInput = num(S.feeRate), fee = isFinite(feeInput) ? feeInput : 0, allocated = 0, gross = 0, fees = 0, valid = true;
+    S.exits.forEach(function (x) { var pct = num(x.pct), price = x.be ? entry : num(x.price); if (!(pct > 0) || !isFinite(price) || !isFinite(entry) || price < 0) { valid = false; return; } allocated += pct; var move = (long ? price - entry : entry - price) / entry; gross += move * pct; fees += fee * pct / 100 * (1 + price / entry); });
+    var out = $('exitSummary');
+    if (!S.exits.length) { out.textContent = '添加分批平仓后，显示加权盈亏估算。'; return; }
+    function setResult(r) { if (S.result === r) return; S.result = r; Array.prototype.forEach.call(document.querySelectorAll('.seg[data-key="result"] button'), function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-v') === r)); }); save(); schedule(); }
+    if (!valid || allocated > 100.001 || !(entry > 0) || fee < 0 || fee > 10) { out.textContent = '请检查进场价、平仓比例和平仓价；累计比例不能超过 100%，手续费率需在 0–10% 内。当前合计 ' + allocated.toFixed(2) + '%。'; setResult('pending'); return; }
+    var net = gross - fees, left = Math.max(0, 100 - allocated);
+    out.textContent = '已平 ' + allocated.toFixed(2) + '% · 剩余 ' + left.toFixed(2) + '%' + (left > 0.001 ? '（未计入已实现盈亏）' : '（全部平仓）') + '；加权毛收益 ' + gross.toFixed(2) + '%' + (fee > 0 ? ' · 估算开平仓手续费 ' + fees.toFixed(2) + '% · 净收益 ' + net.toFixed(2) + '%' : ' · 净收益 ' + net.toFixed(2) + '%（未计手续费/资金费）') + '。收益率按进场名义金额计算，不含杠杆放大。';
+    if (left <= 0.001) setResult(net > 0.000001 ? 'win' : net < -0.000001 ? 'loss' : 'be'); else setResult('pending');
+  }
+  function exitDetails(c) { return (c.exits || []).map(function (x) { return String(x.pct || '0') + '% @ ' + (x.be ? '保本价' : String(x.price || '—')); }).join('；'); }
+  function buildExits() {
+    var box = $('exitList'); box.textContent = '';
+    S.exits.forEach(function (x, i) {
+      var row = document.createElement('div'); row.className = 'exit-row';
+      function field(label, key, ph) { var wrap = document.createElement('label'); wrap.className = 'f'; wrap.textContent = label; var inp = document.createElement('input'); inp.type = 'text'; inp.inputMode = 'decimal'; inp.className = 'num'; inp.placeholder = ph || ''; inp.value = x[key] || ''; inp.addEventListener('input', function () { x[key] = inp.value; updateExitSummary(); save(); }); wrap.appendChild(inp); return { wrap: wrap, input: inp }; }
+      var n = document.createElement('div'); n.className = 'tag'; n.textContent = '平仓 ' + (i + 1);
+      var q = field('平仓比例 %', 'pct', '50'), p = field('平仓价', 'price', '价格');
+      var be = document.createElement('label'); be.className = 'be-label'; var ck = document.createElement('input'); ck.type = 'checkbox'; ck.checked = !!x.be; var tx = document.createElement('span'); tx.textContent = '保本'; be.appendChild(ck); be.appendChild(tx);
+      function syncBe() { x.be = ck.checked; p.input.disabled = ck.checked; if (ck.checked) { var ep = avgEntry(S); p.input.value = isFinite(ep) ? fmt(ep) : ''; x.price = p.input.value; } updateExitSummary(); save(); }
+      ck.addEventListener('change', syncBe);
+      var del = document.createElement('button'); del.type = 'button'; del.className = 'del-exit'; del.textContent = '×'; del.setAttribute('aria-label', '删除分批平仓'); del.addEventListener('click', function () { pushUndo(); S.exits.splice(i, 1); buildExits(); updateExitSummary(); save(); });
+      p.input.disabled = !!x.be; row.appendChild(n); row.appendChild(q.wrap); row.appendChild(p.wrap); row.appendChild(be); row.appendChild(del); box.appendChild(row);
+    });
+    updateExitSummary();
+  }
+  $('btnAddExit').addEventListener('click', function () { S.exits.push({ pct: '', price: '', be: false }); buildExits(); save(); });
+
+  /* ---- position calculator (capital never reaches the card or the history) ---- */
+  var calcRes = null;
+  function updateCalc() {
+    var out = $('calcOut'); out.textContent = ''; calcRes = null;
+    var eq = num(S.equity), rp = num(S.riskPct), lev = num(S.lev), e = avgEntry(S), sl = num(S.sl);
+    function line(k, v, warn) { var d = document.createElement('div'); d.className = 'kv' + (warn ? ' bad' : ''); var a = document.createElement('span'); a.textContent = k; var b = document.createElement('b'); b.textContent = v; d.appendChild(a); d.appendChild(b); out.appendChild(d); }
+    if (!(eq > 0) || !(rp > 0) || rp > 100 || !isFinite(e) || !isFinite(sl)) { var h = document.createElement('div'); h.className = 'calc-hint'; h.textContent = '填写本金、单笔风险和进场、止损后，这里显示建议仓位。'; out.appendChild(h); return; }
+    var dist = Math.abs(e - sl) / e; if (!(dist > 0)) { var h2 = document.createElement('div'); h2.className = 'calc-hint'; h2.textContent = '进场价和止损价不能相同。'; out.appendChild(h2); return; }
+    var risk = eq * rp / 100, notional = risk / dist, qty = notional / e, mult = notional / eq, margin = lev >= 1 ? notional / lev : null;
+    calcRes = { mult: mult };
+    line('最大亏损', risk.toFixed(2) + ' USDT（本金 ' + rp + '%）');
+    line('止损距离', (dist * 100).toFixed(2) + '%（按平均进场价）');
+    line('建议名义仓位', notional.toFixed(2) + ' USDT · ' + mult.toFixed(2) + ' 倍本金');
+    line('数量', compact(qty) + ' ' + normSymbol(S.symbol).replace(/USDT$/, ''));
+    if (margin !== null) line('所需保证金', margin.toFixed(2) + ' USDT（' + lev + 'x）', margin > eq);
+    var lq = liqPrice(S); if (isFinite(lq)) line('估算强平价', fmt(lq) + '（逐仓近似）', S.dir === 'long' ? sl <= lq : sl >= lq);
+    if (rp > 3) line('提示', '单笔风险超过 3%，属于激进仓位', true);
+    if (margin !== null && margin > eq) line('提示', '所需保证金超过本金，请降低仓位或提高杠杆', true);
+  }
+  $('btnCalcFill').addEventListener('click', function () {
+    if (!calcRes) { toast('先填好本金、风险比例、进场和止损。'); return; }
+    pushUndo(); S.size = calcRes.mult.toFixed(2) + '倍'; $('size').value = S.size; save(); schedule(); toast('已填入仓位 ' + S.size + '。本金不会出现在卡片和历史里。');
+  });
+
+  function syncForm() {
+    TEXT_IDS.forEach(function (id) { $(id).value = S[id] || ''; });
+    CHECK_IDS.forEach(function (id) { $(id).checked = !!S[id]; });
+    segPaint.forEach(function (p) { p(); });
+    buildTps(); buildEnts(); buildExits(); updateCalc(); markCoins(); save(); schedule();
+  }
+  function markCoins() {
+    Array.prototype.forEach.call(document.querySelectorAll('#hotCoins [data-symbol]'), function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-symbol') === normSymbol(S.symbol))); });
+  }
+
+  /* ================= live strip + draw loop ================= */
   function sgn(x) { return (x >= 0 ? '+' : '−') + Math.abs(x).toFixed(2) + '%'; }
   function renderLive(t) {
     var box = $('live'); box.textContent = '';
@@ -887,11 +1271,14 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
     var b = document.createElement('span'); b.className = 'px'; b.textContent = fmt(t.price);
     var c = document.createElement('span'); c.className = 'chg'; c.style.color = col; c.textContent = isFinite(t.chg) ? sgn(t.chg) + ' 24h' : '';
     l1.appendChild(a); l1.appendChild(b); l1.appendChild(c); box.appendChild(l1);
-    var long = S.dir === 'long', chips = [], p = t.price;
-    var eLo = num(S.entryLo), eHi = isFinite(num(S.entryHi)) ? num(S.entryHi) : eLo, sl = num(S.sl), t1 = num(usedTps(S)[0].lo);
-    if (isFinite(eLo)) { var lo = Math.min(eLo, eHi), hi = Math.max(eLo, eHi); chips.push(p >= lo && p <= hi ? ['在进场区间内', true] : ['距进场 ' + sgn(((p < lo ? lo : hi) - p) / p * 100), false]); }
-    if (isFinite(sl)) chips.push((long ? p <= sl : p >= sl) ? ['已触及止损位', true] : ['距止损 ' + sgn((sl - p) / p * 100), false]);
-    if (isFinite(t1)) chips.push((long ? p >= t1 : p <= t1) ? ['已到 TP1', true] : ['距 TP1 ' + sgn((t1 - p) / p * 100), false]);
+    var long = S.dir === 'long', chips = [], p = t.price, zs = entryList(S).map(entryBounds), sl = num(S.sl), t1 = num(usedTps(S)[0].lo);
+    if (zs.length) {
+      var inZ = zs.some(function (z) { return p >= z[0] && p <= z[1]; });
+      if (inZ) chips.push(['在进场区间内', true]);
+      else { var best = null; zs.forEach(function (z) { var edge = p < z[0] ? z[0] : z[1], d = Math.abs(edge - p); if (!best || d < best.d) best = { d: d, edge: edge }; }); chips.push(['距进场 ' + sgn((best.edge - p) / p * 100), false]); }
+    }
+    if (isFinite(sl)) chips.push([(long ? p <= sl : p >= sl) ? '已触及止损位' : '距止损 ' + sgn((sl - p) / p * 100), (long ? p <= sl : p >= sl)]);
+    if (isFinite(t1)) chips.push([(long ? p >= t1 : p <= t1) ? '已到 TP1' : '距 TP1 ' + sgn((t1 - p) / p * 100), (long ? p >= t1 : p <= t1)]);
     var cs = document.createElement('div'); cs.className = 'cs';
     chips.forEach(function (x) { var e = document.createElement('span'); e.className = 'c' + (x[1] ? ' hit' : ''); e.textContent = x[0]; cs.appendChild(e); });
     box.appendChild(cs);
@@ -907,8 +1294,10 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
     var lowLabel = document.createElement('span'); lowLabel.textContent = '低 ' + fmt(low);
     var highLabel = document.createElement('span'); highLabel.textContent = '高 ' + fmt(high);
     ends.appendChild(lowLabel); ends.appendChild(highLabel); box.appendChild(ends);
+    var tiles = [['24h 涨跌', sgn(t.chg)], ['24h 成交额', isFinite(t.quoteVol) ? compact(t.quoteVol) + ' USDT' : '—'], ['24h 成交量', isFinite(t.vol) ? compact(t.vol) + ' ' + t.sym.replace(/USDT$/, '') : '—'], ['成交笔数', t.trades ? t.trades.toLocaleString() : '—']];
+    var ex = S.extra; if (ex && ex.sym === t.sym) { if (ex.fr !== null) tiles.push(['资金费率', (ex.fr >= 0 ? '+' : '') + ex.fr.toFixed(4) + '%']); if (ex.ls !== null) tiles.push(['多空账户比', ex.ls.toFixed(2)]); if (ex.oi !== null) tiles.push(['持仓量', compact(ex.oi) + ' ' + t.sym.replace(/USDT$/, '')]); }
     var stats = document.createElement('div'); stats.className = 'quoteGrid';
-    [['24h 涨跌', sgn(t.chg)], ['24h 成交额', isFinite(t.quoteVol) ? fmt(t.quoteVol) + ' USDT' : '—'], ['24h 成交量', isFinite(t.vol) ? fmt(t.vol) + ' ' + t.sym.replace(/USDT$/,'') : '—'], ['成交笔数', t.trades ? t.trades.toLocaleString() : '—']].forEach(function (x, i) {
+    tiles.forEach(function (x, i) {
       var tile = document.createElement('div'); tile.className = 'quoteTile';
       var label = document.createElement('small'); label.textContent = x[0];
       var value = document.createElement('b'); value.textContent = x[1]; if (i === 0) value.style.color = col;
@@ -916,13 +1305,16 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
     });
     box.appendChild(stats);
   }
-
-  /* fonts: load every glyph on the card before drawing */
+  function draw() {
+    var A = drawCard(cv, S); $('warn').textContent = A.warn;
+    renderLive(lastTicker && lastTicker.sym === normSymbol(S.symbol) ? lastTicker : null);
+  }
   var drawTimer = null, fontKey = '';
   function cardText(s) {
-    var t = ['symbol','subtitle','entryLo','entryHi','sl','size','author','note','disclaimer','resultText'].map(function (k) { return s[k] || ''; }).join('');
+    var t = ['symbol', 'subtitle', 'entryLo', 'entryHi', 'entryPct', 'sl', 'size', 'lev', 'trigger', 'author', 'note', 'disclaimer', 'resultText', 'tags', 'ts', 'stampId', 'stampTs'].map(function (k) { return s[k] || ''; }).join('') + (S.qrCaption || '') + (S.watermark || '');
     (s.tps || []).forEach(function (x) { t += (x.lo || '') + (x.hi || ''); });
-    return t + '做多做空进场区间仓位止盈止损盈亏比空间交易计划风险提示已盈利亏损保本0123456789TP·';
+    (s.ents || []).forEach(function (x) { t += (x.lo || '') + (x.hi || '') + (x.pct || ''); });
+    return t + Object.keys(I18N.zh).map(function (k) { return I18N.zh[k]; }).join('') + '0123456789TP·→↗↘↑↓/:：%+−-.，。';
   }
   function ensureFonts(s) {
     if (!document.fonts || !document.fonts.load) return Promise.resolve();
@@ -930,7 +1322,7 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
     if (key === fontKey) return Promise.resolve();
     fontKey = key;
     return Promise.all([
-      document.fonts.load('400 28px "Noto Sans SC"', t), document.fonts.load('500 28px "Noto Sans SC"', t), document.fonts.load('700 40px "Noto Sans SC"', t),
+      document.fonts.load('400 28px "Noto Sans SC"', t), document.fonts.load('500 28px "Noto Sans SC"', t), document.fonts.load('600 28px "Noto Sans SC"', t), document.fonts.load('700 40px "Noto Sans SC"', t),
       document.fonts.load('500 24px "JetBrains Mono"', t), document.fonts.load('700 40px "JetBrains Mono"', t)
     ]).catch(function () {});
   }
@@ -940,19 +1332,19 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
     drawTimer = setTimeout(function () { ensureFonts().then(draw); }, 250);
   }
 
-  /* ---------- history ---------- */
+
+  /* ================= history ================= */
   function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
-  var off = document.createElement('canvas'); off.width = W; off.height = H;
-  var thumbC = document.createElement('canvas'); thumbC.width = 270; thumbC.height = 338;
+  var off = document.createElement('canvas'), thumbC = document.createElement('canvas'); thumbC.width = 270; thumbC.height = 338;
   function makeThumb(card) {
     return ensureFonts(card).then(function () {
       drawCard(off, card);
-      var t = thumbC.getContext('2d'); t.drawImage(off, 0, 0, 270, 338);
+      var t = thumbC.getContext('2d'), sc = Math.min(270 / off.width, 338 / off.height), w = off.width * sc, h = off.height * sc;
+      t.fillStyle = (THEMES[card.theme] || THEMES.light).bg; t.fillRect(0, 0, 270, 338); t.drawImage(off, (270 - w) / 2, (338 - h) / 2, w, h);
       return thumbC.toDataURL('image/jpeg', 0.72);
-    }).then(function (u) { ctx = cv.getContext('2d'); return u; });
+    });
   }
-  function upsert(thumb) {
-    var card = snapshot(); card.ts = stamp();
+  function upsert(card, thumb) {
     var item = null;
     for (var i = 0; i < hist.length; i++) if (hist[i].id === currentId) { item = hist[i]; break; }
     if (item) { item.card = card; item.thumb = thumb; }
@@ -960,41 +1352,141 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
     var ok = saveHist(); renderHist();
     return ok;
   }
-  function persistCurrent(msg) {
-    var card = snapshot(); card.ts = stamp();
-    return makeThumb(card).then(function (th) {
-      var ok = upsert(th);
-      toast(ok ? (msg || '已保存到历史') : '浏览器存储已满，已保存但没有缩略图。建议先导出再清理旧记录。');
+
+  /* ---- timestamp / ID ("存证"): hash of the plan, stamped by your backend's clock when configured ---- */
+  function sha256(str) {
+    if (!(window.crypto && crypto.subtle)) return Promise.resolve('');
+    return crypto.subtle.digest('SHA-256', new TextEncoder().encode(str)).then(function (b) { return Array.prototype.map.call(new Uint8Array(b), function (x) { return ('0' + x.toString(16)).slice(-2); }).join(''); });
+  }
+  function cardHash(card) { var c = clone(card); ['stampId', 'stampTs', 'stampHash', 'ts', 'kl', 'klTrend', 'extra'].forEach(function (k) { delete c[k]; }); return sha256(JSON.stringify(c)); }
+  function ensureStamp(card) {
+    if (!S.doStamp) { card.stampId = ''; card.stampTs = ''; card.stampHash = ''; return Promise.resolve(card); }
+    return cardHash(card).then(function (h) {
+      if (!h) { toast('当前浏览器环境不支持计算哈希，无法生成存证编号。'); return card; }
+      if (card.stampHash === h && card.stampId) return card;
+      card.stampHash = h;
+      var p = S.bnProxy ? backend('/stamp', { method: 'POST', body: { hash: h, symbol: normSymbol(card.symbol), dir: card.dir } }).then(function (r) {
+        if (r && typeof r.id === 'string' && /^[A-Za-z0-9-]{4,40}$/.test(r.id)) { card.stampId = r.id; card.stampTs = cut(r.ts, 40); } else throw new Error('后端返回的存证格式不对');
+      }) : Promise.reject(null);
+      return p.catch(function (e) { card.stampId = 'L' + h.slice(0, 7).toUpperCase(); card.stampTs = ''; if (S.bnProxy) toast('后端存证失败，已改用本地编号：' + (e && e.message ? e.message : '')); }).then(function () { return card; });
     });
   }
+  function applyStamp(card) { S.stampId = card.stampId; S.stampTs = card.stampTs; S.stampHash = card.stampHash; save(); }
+
+  function persistCurrent(msg) {
+    var card = snapshot(); card.ts = stamp();
+    return ensureFonts(card).then(function () { return ensureStamp(card); }).then(function () {
+      applyStamp(card); draw();
+      return makeThumb(card).then(function (th) {
+        var ok = upsert(card, th);
+        toast(ok ? (msg || '已保存到历史') : '浏览器存储已满，已保存但没有缩略图。建议先导出再清理旧记录。');
+      });
+    });
+  }
+
+  /* ---- filters, tags, stats ---- */
+  var hf = { q: '', res: 'all', tag: '' }, sel = Object.create(null);
+  function tagsOf(c) { return String(c.tags || '').split(/[,，\s]+/).map(function (t) { return t.trim(); }).filter(Boolean).slice(0, 10); }
+  function filtered() {
+    return hist.filter(function (it) {
+      var c = it.card;
+      if (hf.res !== 'all' && (c.result || 'pending') !== hf.res) return false;
+      if (hf.tag && tagsOf(c).indexOf(hf.tag) < 0) return false;
+      if (hf.q && (c.symbol + ' ' + c.tags + ' ' + c.note + ' ' + c.resultText).toLowerCase().indexOf(hf.q.toLowerCase()) < 0) return false;
+      return true;
+    });
+  }
+  function calcStats(list) {
+    var st = { n: list.length, w: 0, l: 0, b: 0, p: 0, rrSum: 0, rrN: 0, realN: 0, netSum: 0, rSum: 0, rN: 0, best: null, worst: null, curve: [], maxDD: 0, maxW: 0, maxL: 0, tags: {} };
+    var chron = list.slice().sort(function (a, b) { return String(a.card.ts || '').localeCompare(String(b.card.ts || '')); });
+    var runW = 0, runL = 0, cum = 0, peak = 0;
+    chron.forEach(function (it) {
+      var c = it.card, r = c.result || 'pending', A = analyse(c);
+      if (r === 'win') st.w++; else if (r === 'loss') st.l++; else if (r === 'be') st.b++; else st.p++;
+      if (A.ok) { st.rrSum += A.rr; st.rrN++; }
+      if (r === 'win') { runW++; runL = 0; } else if (r === 'loss') { runL++; runW = 0; }
+      st.maxW = Math.max(st.maxW, runW); st.maxL = Math.max(st.maxL, runL);
+      var re = realized(c);
+      if (re) {
+        st.realN++; st.netSum += re.net; cum += re.net; peak = Math.max(peak, cum); st.maxDD = Math.max(st.maxDD, peak - cum); st.curve.push({ v: cum, it: it });
+        if (re.R !== null) { st.rSum += re.R; st.rN++; }
+        if (st.best === null || re.net > st.best) st.best = re.net; if (st.worst === null || re.net < st.worst) st.worst = re.net;
+      }
+      tagsOf(c).forEach(function (t) { var g = st.tags[t] || (st.tags[t] = { n: 0, w: 0, l: 0 }); g.n++; if (r === 'win') g.w++; else if (r === 'loss') g.l++; });
+    });
+    st.winRate = (st.w + st.l) ? st.w / (st.w + st.l) * 100 : null;
+    st.beRate = (st.w + st.l + st.b) ? st.b / (st.w + st.l + st.b) * 100 : null;
+    st.avgRR = st.rrN ? st.rrSum / st.rrN : null; st.avgR = st.rN ? st.rSum / st.rN : null;
+    return st;
+  }
+  function renderStats(list) {
+    var st = calcStats(list), box = $('stats'); box.textContent = '';
+    [['共', st.n + ' 单'], ['盈利', st.w], ['亏损', st.l], ['保本', st.b], ['进行中', st.p], ['胜率', st.winRate === null ? '—' : Math.round(st.winRate) + '%'], ['保本率', st.beRate === null ? '—' : Math.round(st.beRate) + '%']].forEach(function (x) {
+      var s = document.createElement('span'); s.appendChild(document.createTextNode(x[0] + ' ')); var bb = document.createElement('b'); bb.textContent = x[1]; s.appendChild(bb); box.appendChild(s);
+    });
+    var d = $('sdetail'); d.textContent = '';
+    function row(k, v) { var r = document.createElement('div'); r.className = 'kv'; var a = document.createElement('span'); a.textContent = k; var b = document.createElement('b'); b.textContent = v; r.appendChild(a); r.appendChild(b); d.appendChild(r); }
+    row('计划盈亏比均值', st.avgRR === null ? '—' : '1 : ' + st.avgRR.toFixed(2) + '（' + st.rrN + ' 单）');
+    row('最长连盈 / 连亏', st.maxW + ' / ' + st.maxL + ' 单');
+    row('已录入收益的单数', st.realN + ' / ' + st.n);
+    row('累计净收益', st.realN ? (st.netSum >= 0 ? '+' : '') + st.netSum.toFixed(2) + '%（按进场名义金额，不含杠杆）' : '—');
+    row('平均 R 倍数', st.avgR === null ? '—' : st.avgR.toFixed(2) + ' R');
+    row('最大回撤（累计收益曲线）', st.realN ? st.maxDD.toFixed(2) + '%' : '—');
+    row('单笔最好 / 最差', st.realN ? (st.best >= 0 ? '+' : '') + st.best.toFixed(2) + '% / ' + (st.worst >= 0 ? '+' : '') + st.worst.toFixed(2) + '%' : '—');
+    var tg = Object.keys(st.tags); if (tg.length) {
+      var h = document.createElement('div'); h.className = 'calc-hint'; h.textContent = '按标签统计'; d.appendChild(h);
+      tg.sort(function (a, b) { return st.tags[b].n - st.tags[a].n; }).slice(0, 12).forEach(function (t) {
+        var g = st.tags[t], wr = (g.w + g.l) ? Math.round(g.w / (g.w + g.l) * 100) : null;
+        var r = document.createElement('div'); r.className = 'tagrow';
+        var nm = document.createElement('span'); nm.textContent = t + ' · ' + g.n + ' 单';
+        var bar = document.createElement('i'); bar.style.setProperty('--w', (wr === null ? 0 : wr) + '%');
+        var v = document.createElement('b'); v.textContent = wr === null ? '—' : wr + '%';
+        r.appendChild(nm); r.appendChild(bar); r.appendChild(v); d.appendChild(r);
+      });
+    }
+    return st;
+  }
   function resultPill(r) { var p = document.createElement('span'); p.className = 'pill' + (r === 'win' ? ' win' : r === 'loss' ? ' loss' : ''); p.textContent = RESULT_LABEL[r] || RESULT_LABEL.pending; return p; }
+  var lastDeleted = null;
   function renderHist() {
     var list = $('hlist'); list.textContent = '';
-    var w = 0, l = 0, b = 0, p = 0;
-    hist.forEach(function (it) { var r = it.card.result || 'pending'; if (r === 'win') w++; else if (r === 'loss') l++; else if (r === 'be') b++; else p++; });
-    var st = $('stats'); st.textContent = '';
-    [['共', hist.length + ' 单'], ['盈利', w], ['亏损', l], ['保本', b], ['进行中', p], ['胜率', (w + l) ? Math.round(w / (w + l) * 100) + '%' : '—'], ['保本率', (w + l + b) ? Math.round(b / (w + l + b) * 100) + '%' : '—']].forEach(function (x) {
-      var s = document.createElement('span'); s.appendChild(document.createTextNode(x[0] + ' ')); var bb = document.createElement('b'); bb.textContent = x[1]; s.appendChild(bb); st.appendChild(s);
+    var F = filtered(); renderStats(F);
+    // tag chips
+    var all = Object.create(null); hist.forEach(function (it) { tagsOf(it.card).forEach(function (t) { all[t] = (all[t] || 0) + 1; }); });
+    var tc = $('tagChips'); tc.textContent = '';
+    Object.keys(all).sort().slice(0, 20).forEach(function (t) {
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'tagchip'; b.textContent = '#' + t + ' ' + all[t]; b.setAttribute('aria-pressed', String(hf.tag === t));
+      b.addEventListener('click', function () { hf.tag = hf.tag === t ? '' : t; renderHist(); }); tc.appendChild(b);
     });
-    if (!hist.length) { var e = document.createElement('div'); e.className = 'empty'; e.textContent = '还没有记录。点击“生成图片”或“保存到历史”后，这里会出现交易单。'; list.appendChild(e); return; }
-    hist.forEach(function (it) {
+    var nsel = Object.keys(sel).filter(function (k) { return sel[k]; }).length;
+    $('btnBoard').textContent = '合成长图（已选 ' + nsel + '）';
+    if (!F.length) { var e = document.createElement('div'); e.className = 'empty'; e.textContent = hist.length ? '没有符合筛选条件的记录。' : '还没有记录。点击“生成图片”或“保存到历史”后，这里会出现交易单。'; list.appendChild(e); return; }
+    F.forEach(function (it) {
       var c = it.card, row = document.createElement('div'); row.className = 'hi';
+      var left = document.createElement('div'); left.className = 'hleft';
+      var ck = document.createElement('input'); ck.type = 'checkbox'; ck.className = 'chk'; ck.checked = !!sel[it.id]; ck.setAttribute('aria-label', '选择这一单'); ck.addEventListener('change', function () { sel[it.id] = ck.checked; var n = Object.keys(sel).filter(function (k) { return sel[k]; }).length; $('btnBoard').textContent = '合成长图（已选 ' + n + '）'; });
       var img = document.createElement('img'); img.alt = ''; if (it.thumb) img.src = it.thumb;
+      left.appendChild(ck); left.appendChild(img);
       var meta = document.createElement('div'); meta.className = 'meta';
       var t1 = document.createElement('div'); t1.className = 't1';
       var sy = document.createElement('span'); sy.className = 'sym'; sy.textContent = c.symbol || '—';
       var dr = document.createElement('span'); dr.className = 'pill'; dr.textContent = c.dir === 'long' ? '做多' : '做空';
       t1.appendChild(sy); t1.appendChild(dr); t1.appendChild(resultPill(c.result));
+      if (c.draftSrc) { var dp = document.createElement('span'); dp.className = 'pill'; dp.textContent = c.draftSrc === 'ai' ? 'AI 草稿' : '规则草稿'; t1.appendChild(dp); }
+      if (c.stampId) { var sp = document.createElement('span'); sp.className = 'pill'; sp.textContent = 'No.' + c.stampId; t1.appendChild(sp); }
+      tagsOf(c).forEach(function (t) { var tp = document.createElement('span'); tp.className = 'pill tagp'; tp.textContent = '#' + t; t1.appendChild(tp); });
       var sub = document.createElement('div'); sub.className = 'sub';
-      var A = analyse(c);
-      sub.textContent = (c.ts || '') + ' · 进场 ' + rangeText(c.entryLo, c.entryHi) + ' · 止损 ' + (c.sl || '—') + (A.ok ? ' · 盈亏比 1:' + A.rr.toFixed(2) : '') + (c.exits && c.exits.length ? ' · 分批：' + exitDetails(c) + ' · 手续费率 ' + (c.feeRate||'0') + '%' : '') + (c.resultText ? ' · ' + c.resultText : '');
+      var A = analyse(c), re = realized(c);
+      sub.textContent = (c.ts || '') + ' · 进场 ' + entryList(c).map(function (e) { return rangeText(e.lo, e.hi); }).join(' / ') + ' · 止损 ' + (c.sl || '—') + (A.ok ? ' · 盈亏比 1:' + A.rr.toFixed(2) : '') + (c.exits && c.exits.length ? ' · 分批：' + exitDetails(c) + ' · 手续费率 ' + (c.feeRate || '0') + '%' : '') + (re ? ' · 净收益 ' + (re.net >= 0 ? '+' : '') + re.net.toFixed(2) + '%' : '') + (c.resultText ? ' · ' + c.resultText : '');
       var ops = document.createElement('div'); ops.className = 'ops';
       function btn(txt, fn, pressed) { var x = document.createElement('button'); x.type = 'button'; x.textContent = txt; if (pressed !== undefined) x.setAttribute('aria-pressed', String(pressed)); x.addEventListener('click', fn); ops.appendChild(x); return x; }
       btn('载入', function () {
-        CARD_KEYS.forEach(function (k) { if (c[k] !== undefined) S[k] = clone(c[k]); });
+        pushUndo(); CARD_KEYS.forEach(function (k) { if (c[k] !== undefined) S[k] = clone(c[k]); });
+        if (!S.tps.length) S.tps = [{ lo: '', hi: '' }];
         currentId = it.id; syncForm(); toast('已载入，修改后点“保存到历史”会更新这一单。'); window.scrollTo({ top: 0, behavior: 'smooth' });
       });
       btn('图片', function () { openImage(c); });
+      btn('复盘', function () { reviewItem(it); });
       ['win', 'loss', 'be', 'pending'].forEach(function (r) {
         btn(RESULT_LABEL[r], function () {
           it.card.result = r; if (currentId === it.id) { S.result = r; syncForm(); }
@@ -1003,41 +1495,41 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
       });
       var del = btn('删除', function () {
         if (del.getAttribute('data-ask') !== '1') { del.setAttribute('data-ask', '1'); del.textContent = '确认删除'; return; }
+        var idx = hist.indexOf(it); lastDeleted = { it: it, idx: idx };
         hist = hist.filter(function (h) { return h.id !== it.id; }); if (currentId === it.id) currentId = null; saveHist(); renderHist();
+        toast('已删除 ' + (c.symbol || '') + ' 这一单。', '撤销', function () { if (lastDeleted) { hist.splice(Math.min(lastDeleted.idx, hist.length), 0, lastDeleted.it); lastDeleted = null; saveHist(); renderHist(); toast('已恢复。'); } });
       });
       meta.appendChild(t1); meta.appendChild(sub); meta.appendChild(ops);
-      row.appendChild(img); row.appendChild(meta); list.appendChild(row);
+      row.appendChild(left); row.appendChild(meta); list.appendChild(row);
     });
   }
+  $('hq').addEventListener('input', function () { hf.q = this.value.slice(0, 60); renderHist(); });
+  $('hres').addEventListener('change', function () { hf.res = this.value; renderHist(); });
 
-  /* ---------- export / import ---------- */
-  function csvCell(v) { v = String(v === undefined || v === null ? '' : v); if (/^[\u0000-\u0020]*[=+@\-\t\r]/.test(v)) v = "'" + v; return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
-  function buildCsv() {
-    var head = ['时间', '交易对', '方向', '进场区间', '仓位', '止盈', '止损', '盈亏比', '分批平仓', '手续费率(每边%)', '结果', '结果说明', '备注'];
-    var lines = [head.join(',')];
+  /* ================= export / import / cloud sync ================= */
+  function csvCell(v) { v = String(v === undefined || v === null ? '' : v); if (/^[\u0000- ]*[=+@\-\t\r]/.test(v)) v = "'" + v; return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+  var EXPORT_HEAD = ['时间', '交易对', '方向', '进场区间', '仓位', '杠杆', '止盈', '止损', '盈亏比', '分批平仓', '手续费率(每边%)', '净收益%', '结果', '结果说明', '标签', '触发条件', '草稿来源', '存证编号', '备注'];
+  function exportRows() {
+    var rows = [EXPORT_HEAD];
     hist.slice().reverse().forEach(function (it) {
-      var c = it.card, A = analyse(c);
-      lines.push([c.ts, c.symbol, c.dir === 'long' ? '做多' : '做空', rangeText(c.entryLo, c.entryHi), c.size,
-        usedTps(c).map(function (t) { return rangeText(t.lo, t.hi); }).join(' | '), c.sl, A.ok ? A.rr.toFixed(2) : '', exitDetails(c), c.feeRate||'', RESULT_LABEL[c.result || 'pending'], c.resultText, (c.note || '').replace(/\n/g, ' ')].map(csvCell).join(','));
+      var c = it.card, A = analyse(c), re = realized(c);
+      rows.push([c.ts, c.symbol, c.dir === 'long' ? '做多' : '做空', entryList(c).map(function (e) { return rangeText(e.lo, e.hi) + (e.pct ? ' (' + e.pct + '%)' : ''); }).join(' | '), c.size, c.lev, usedTps(c).map(function (t) { return rangeText(t.lo, t.hi); }).join(' | '), c.sl, A.ok ? A.rr.toFixed(2) : '', exitDetails(c), c.feeRate || '', re ? re.net.toFixed(2) : '', RESULT_LABEL[c.result || 'pending'], c.resultText, tagsOf(c).join(' '), c.trigger, c.draftSrc === 'ai' ? 'AI' : c.draftSrc === 'rule' ? '规则' : '', c.stampId, (c.note || '').replace(/\n/g, ' ')]);
     });
-    return lines.join('\n');
+    return rows;
   }
+  function buildCsv() { return exportRows().map(function (r) { return r.map(csvCell).join(','); }).join('\n'); }
   function buildExcelXml() {
-    var head=['时间','交易对','方向','进场区间','仓位','止盈','止损','盈亏比','分批平仓','手续费率(每边%)','结果','结果说明','备注'];
-    var rows=[head];
-    hist.slice().reverse().forEach(function(it){ var c=it.card,A=analyse(c); rows.push([c.ts,c.symbol,c.dir==='long'?'做多':'做空',rangeText(c.entryLo,c.entryHi),c.size,usedTps(c).map(function(t){return rangeText(t.lo,t.hi);}).join(' | '),c.sl,A.ok?A.rr.toFixed(2):'',exitDetails(c),c.feeRate||'',RESULT_LABEL[c.result||'pending'],c.resultText,(c.note||'').replace(/\n/g,' ')]); });
-    function esc(v){return String(v===undefined||v===null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');}
-    return '<?xml version="1.0" encoding="UTF-8"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="交易记录"><Table>'+rows.map(function(row){return '<Row>'+row.map(function(v){return '<Cell><Data ss:Type="String">'+esc(v)+'</Data></Cell>';}).join('')+'</Row>';}).join('')+'</Table></Worksheet></Workbook>';
+    function esc(v) { return String(v === undefined || v === null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;'); }
+    return '<?xml version="1.0" encoding="UTF-8"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="交易记录"><Table>' + exportRows().map(function (row) { return '<Row>' + row.map(function (v) { return '<Cell><Data ss:Type="String">' + esc(v) + '</Data></Cell>'; }).join('') + '</Row>'; }).join('') + '</Table></Worksheet></Workbook>';
   }
-  function buildJson() { return JSON.stringify({ app: 'trade-card', version: 1, items: hist.map(function (h) { return { id: h.id, card: h.card }; }) }, null, 2); }
+  function buildJson() { return JSON.stringify({ app: 'trade-card', version: 2, items: hist.map(function (h) { return { id: h.id, card: h.card }; }) }, null, 2); }
   var xFile = { name: '', text: '', mime: '' };
+  function openX(file, msg) { xFile = file; $('xText').value = file.text.replace(/^﻿/, ''); $('xMsg').textContent = msg || ''; $('xsheet').hidden = false; }
   function openExport(kind) {
     if (!hist.length) { toast('历史是空的，没有可导出的内容。'); return; }
     var d = new Date(), tag = d.getFullYear() + two(d.getMonth() + 1) + two(d.getDate());
-    if (kind === 'csv') xFile = { name: 'trades-' + tag + '.csv', text: '﻿' + buildCsv(), mime: 'text/csv;charset=utf-8' };
-    else if (kind === 'excel') xFile = { name: 'trades-' + tag + '.xls', text: buildExcelXml(), mime: 'application/vnd.ms-excel;charset=utf-8' };
-    else xFile = { name: 'trades-' + tag + '.json', text: buildJson(), mime: 'application/json' };
-    $('xText').value = xFile.text.replace(/^﻿/, ''); $('xMsg').textContent = '共 ' + hist.length + ' 单。'; $('xsheet').hidden = false;
+    var f = kind === 'csv' ? { name: 'trades-' + tag + '.csv', text: '﻿' + buildCsv(), mime: 'text/csv;charset=utf-8' } : kind === 'excel' ? { name: 'trades-' + tag + '.xls', text: buildExcelXml(), mime: 'application/vnd.ms-excel;charset=utf-8' } : { name: 'trades-' + tag + '.json', text: buildJson(), mime: 'application/json' };
+    openX(f, '共 ' + hist.length + ' 单。本金不会被导出。');
   }
   $('btnExpCsv').addEventListener('click', function () { openExport('csv'); });
   $('btnExpExcel').addEventListener('click', function () { openExport('excel'); });
@@ -1056,39 +1548,32 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
     function fallback() { ta.focus(); ta.select(); $('xMsg').textContent = '已选中内容，请按 Ctrl/Cmd+C 复制。'; }
     try { navigator.clipboard.writeText(xFile.text.replace(/^﻿/, '')).then(function () { $('xMsg').textContent = '已复制。'; }).catch(fallback); } catch (e) { fallback(); }
   });
+  function mergeItems(items) {
+    var have = Object.create(null), fresh = [];
+    hist.forEach(function (h) { have[h.id] = 1; });
+    items.forEach(function (x) {
+      if (!x || typeof x.id !== 'string' || !x.id || !x.card || typeof x.card !== 'object') return;
+      var id = x.id.slice(0, 100); if (have[id]) return;
+      fresh.push({ id: id, card: cleanCard(x.card, false), thumb: '' }); have[id] = 1;
+    });
+    hist = hist.concat(fresh).sort(function (a, b) { return String(b.card.ts || '').localeCompare(String(a.card.ts || '')); }).slice(0, MAX_HIST);
+    var kept = Object.create(null); hist.forEach(function (h) { kept[h.id] = 1; }); fresh = fresh.filter(function (it) { return kept[it.id]; });
+    saveHist(); renderHist();
+    var chain = Promise.resolve();
+    fresh.forEach(function (it) { chain = chain.then(function () { return makeThumb(it.card).then(function (th) { it.thumb = th; }); }); });
+    chain.then(function () { saveHist(); renderHist(); });
+    return fresh.length;
+  }
   $('btnImp').addEventListener('click', function () { $('impFile').click(); });
   $('impFile').addEventListener('change', function () {
     var f = this.files && this.files[0]; if (!f) return;
-    if (f.size > 2 * 1024 * 1024) { toast('导入失败：备份文件不能超过 2 MiB。'); this.value = ''; return; }
+    if (f.size > 4 * 1024 * 1024) { toast('导入失败：备份文件不能超过 4 MiB。'); this.value = ''; return; }
     var rd = new FileReader();
     rd.onload = function () {
       try {
-        var data = JSON.parse(rd.result), items = data && (data.items || data), n = 0, have = Object.create(null);
-        if (!Array.isArray(items) || items.length > 500) throw new Error('备份记录数量无效');
-        hist.forEach(function (h) { have[h.id] = 1; });
-        var fresh = [];
-        items.forEach(function (x) {
-          if (!x || !x.card || typeof x.card !== 'object' || typeof x.id !== 'string' || !x.id || have[x.id]) return;
-          var c = {}, valid = true;
-          CARD_KEYS.forEach(function (k) {
-            var v = x.card[k]; if (v === undefined) return;
-            if (k === 'tps') { if (!Array.isArray(v) || v.length > MAX_TP) valid = false; else c[k] = v.map(function (t) { return { lo: String((t && t.lo) || '').slice(0, 80), hi: String((t && t.hi) || '').slice(0, 80) }; }); }
-            else if (k === 'exits') { if (!Array.isArray(v) || v.length > 20) valid = false; else c[k] = v.map(function(x){return {pct:String((x&&x.pct)||'').slice(0,20),price:String((x&&x.price)||'').slice(0,40),be:!!(x&&x.be)};}); }
-            else if (typeof v === 'string') c[k] = v.slice(0, 2000);
-            else if (typeof v === 'boolean' || typeof v === 'number' || v === null) c[k] = v;
-            else valid = false;
-          });
-          if (!valid) return;
-          CARD_KEYS.forEach(function (k) { if (c[k] === undefined) c[k] = clone(DEFAULTS[k] === undefined ? null : DEFAULTS[k]); });
-          c.kl = null;
-          fresh.push({ id: x.id.slice(0, 100), card: c, thumb: '' }); have[x.id] = 1; n++;
-        });
-        hist = hist.concat(fresh).sort(function (a, b) { return String(b.card.ts || '').localeCompare(String(a.card.ts || '')); }).slice(0, MAX_HIST);
-        var kept=Object.create(null); hist.forEach(function(h){kept[h.id]=1;}); fresh=fresh.filter(function(it){return kept[it.id];}); n=fresh.length;
-        saveHist(); renderHist(); toast('导入 ' + n + ' 单，正在生成缩略图…');
-        var chain = Promise.resolve();
-        fresh.forEach(function (it) { chain = chain.then(function () { return makeThumb(it.card).then(function (th) { it.thumb = th; }); }); });
-        chain.then(function () { saveHist(); renderHist(); toast('导入完成：' + n + ' 单。'); });
+        var data = JSON.parse(rd.result), items = data && (data.items || data);
+        if (!Array.isArray(items) || items.length > 1000) throw new Error('备份记录数量无效');
+        toast('导入完成：' + mergeItems(items) + ' 单新记录。');
       } catch (e) { toast('导入失败：文件不是有效的备份 JSON。'); }
     };
     rd.readAsText(f); this.value = '';
@@ -1096,29 +1581,40 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
   $('btnClear').addEventListener('click', function () {
     var b = $('btnClear');
     if (b.getAttribute('data-ask') !== '1') { b.setAttribute('data-ask', '1'); b.textContent = '再点一次确认清空'; setTimeout(function () { b.removeAttribute('data-ask'); b.textContent = '清空'; }, 4000); return; }
-    hist = []; currentId = null; saveHist(); renderHist(); b.removeAttribute('data-ask'); b.textContent = '清空'; toast('历史已清空。');
+    var backup = hist; hist = []; currentId = null; saveHist(); renderHist(); b.removeAttribute('data-ask'); b.textContent = '清空';
+    toast('历史已清空。', '撤销', function () { hist = backup; saveHist(); renderHist(); toast('已恢复。'); });
+  });
+  $('btnSyncUp').addEventListener('click', function () {
+    toast('正在上传…');
+    backend('/sync', { method: 'PUT', body: { items: hist.map(function (h) { return { id: h.id, card: h.card }; }) }, timeout: 30000 }).then(function () { toast('已上传 ' + hist.length + ' 单到你的后端。'); }).catch(function (e) { toast('上传失败：' + (e && e.message ? e.message : '网络请求被拒绝')); });
+  });
+  $('btnSyncDown').addEventListener('click', function () {
+    toast('正在下载…');
+    backend('/sync', { timeout: 30000 }).then(function (r) {
+      var items = r && r.items; if (!Array.isArray(items) || items.length > 1000) throw new Error('后端返回的数据格式不对');
+      toast('从后端合并了 ' + mergeItems(items) + ' 单新记录。');
+    }).catch(function (e) { toast('下载失败：' + (e && e.message ? e.message : '网络请求被拒绝')); });
   });
 
-  /* ---------- image sheet ---------- */
+  /* ================= image sheet / generate / text version ================= */
   var lastUrl = '';
-  function showSheet(url) { lastUrl = url; $('outImg').src = url; $('outMsg').textContent = '手机长按图片保存，电脑右键图片另存为。'; $('sheet').hidden = false; }
+  function showSheet(url, msg) { lastUrl = url; $('outImg').src = url; $('outMsg').textContent = msg || '手机长按图片保存，电脑右键图片另存为。'; $('sheet').hidden = false; }
   function generate() {
     var card = snapshot(); card.ts = stamp();
-    ensureFonts(card).then(function () {
-      draw(); var url = cv.toDataURL('image/png');
-      makeThumb(card).then(function (th) { var ok = upsert(th); toast(ok ? '已自动保存到历史。' : '图片已生成，但浏览器存储已满，历史没有缩略图。'); });
+    ensureFonts(card).then(function () { return ensureStamp(card); }).then(function () {
+      applyStamp(card); draw();
+      var url = cv.toDataURL('image/png');
+      makeThumb(card).then(function (th) { var ok = upsert(card, th); toast(ok ? '已自动保存到历史。' : '图片已生成，但浏览器存储已满，历史没有缩略图。'); });
       showSheet(url);
     });
   }
-  function openImage(card) {
-    ensureFonts(card).then(function () { drawCard(off, card); var u = off.toDataURL('image/png'); ctx = cv.getContext('2d'); showSheet(u); });
-  }
+  function openImage(card) { ensureFonts(card).then(function () { drawCard(off, card); showSheet(off.toDataURL('image/png')); }); }
   $('btnGen').addEventListener('click', generate);
   $('btnGen2').addEventListener('click', generate);
   $('btnSave').addEventListener('click', function () { persistCurrent(); });
   $('btnSave2').addEventListener('click', function () { persistCurrent(); });
   $('btnNew').addEventListener('click', function () {
-    currentId = null; S.result = 'pending'; S.resultText = ''; syncForm(); toast('已开始新的一单，保存后会新增一条记录。');
+    pushUndo(); currentId = null; S.result = 'pending'; S.resultText = ''; S.stampId = ''; S.stampTs = ''; S.stampHash = ''; syncForm(); toast('已开始新的一单，保存后会新增一条记录。', '撤销', function () { $('btnUndo').click(); });
   });
   $('btnClose').addEventListener('click', function () { $('sheet').hidden = true; });
   $('sheet').addEventListener('click', function (e) { if (e.target === $('sheet')) $('sheet').hidden = true; });
@@ -1132,19 +1628,224 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
     } catch (e) { $('outMsg').textContent = '请长按或右键图片保存。'; }
   });
   $('btnCopy').addEventListener('click', function () {
-    fetch(lastUrl).then(function (r) { return r.blob(); }).then(function (blob) {
-      return navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-    }).then(function () { $('outMsg').textContent = '已复制到剪贴板。'; })
+    fetch(lastUrl).then(function (r) { return r.blob(); }).then(function (blob) { return navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]); })
+      .then(function () { $('outMsg').textContent = '已复制到剪贴板。'; })
       .catch(function () { $('outMsg').textContent = '浏览器拒绝了复制，请长按或右键图片保存。'; });
   });
+  function buildText(c) {
+    var A = analyse(c), zh = c.lang !== 'en', lines = [], ents = entryList(c), tps = usedTps(c);
+    lines.push((c.symbol || '') + ' ' + L(c, c.dir === 'long' ? 'long' : 'short') + (c.draftSrc ? ' [' + L(c, c.draftSrc === 'ai' ? 'draftAi' : 'draftRule') + ']' : ''));
+    ents.forEach(function (e, i) { lines.push(L(c, 'entry') + (ents.length > 1 ? ' ' + (i + 1) + (e.pct ? ' (' + e.pct + '%)' : '') : '') + ': ' + rangeText(e.lo, e.hi)); });
+    tps.forEach(function (t, i) { lines.push(L(c, 'tp') + (tps.length > 1 ? ' ' + (i + 1) : '') + ': ' + rangeText(t.lo, t.hi)); });
+    lines.push(L(c, 'sl') + ': ' + (c.sl || '—'));
+    if ((c.size || '').trim()) lines.push(L(c, 'size') + ': ' + c.size.trim());
+    if (A.ok) lines.push(L(c, 'rr') + ': 1:' + A.rr.toFixed(2));
+    if ((c.trigger || '').trim()) lines.push(L(c, 'trig') + ': ' + c.trigger.trim());
+    if ((c.note || '').trim()) lines.push(c.note.trim());
+    var d = disclaimerText(c); if (d) { lines.push(''); lines.push(L(c, 'risk') + (zh ? '：' : ': ') + d); }
+    if (c.stampId) lines.push('No.' + c.stampId + (c.stampTs ? ' · ' + L(c, 'stamped') + ' ' + c.stampTs : ''));
+    return lines.join('\n');
+  }
+  $('btnText').addEventListener('click', function () { openX({ name: 'trade-plan.txt', text: buildText(S), mime: 'text/plain;charset=utf-8' }, '这是当前交易单的文字版，可直接粘贴到群里。'); });
 
-  /* ---------- Binance actions ---------- */
+  /* ================= review: what price did after the plan was made ================= */
+  function fmtT(ms) { var d = new Date(ms); return two(d.getMonth() + 1) + '-' + two(d.getDate()) + ' ' + two(d.getHours()) + ':' + two(d.getMinutes()); }
+  function analyseTrade(c, rows) {
+    var long = c.dir === 'long', zs = entryList(c).map(entryBounds), e = avgEntry(c), sl = num(c.sl), tps = usedTps(c).map(entryBounds), risk = Math.abs(e - sl);
+    if (!zs.length || !isFinite(e) || !isFinite(sl) || !(risk > 0) || !isFinite(tps[0][0])) return { err: '点位不完整，无法复盘。' };
+    var hiZ = Math.max.apply(null, zs.map(function (z) { return z[1]; })), loZ = Math.min.apply(null, zs.map(function (z) { return z[0]; }));
+    var t1 = long ? tps[0][0] : tps[0][1], out = { e: e, sl: sl, t1: t1, risk: risk, hints: [], i0: -1 };
+    for (var i = 0; i < rows.length; i++) { if (rows[i].d[2] <= hiZ && rows[i].d[1] >= loZ) { out.i0 = i; break; } }
+    var anyTp = rows.some(function (r) { return long ? r.d[1] >= t1 : r.d[2] <= t1; });
+    if (out.i0 < 0) { out.first = 'unfilled'; out.hints.push(anyTp ? '价格没有回到进场区间就已到达 TP1，这一单没有成交，属于错过的行情。' : '这段时间价格没有进入进场区间，计划没有触发。'); return out; }
+    var slIdx = -1, tpIdx = -1, j, d;
+    for (j = out.i0; j < rows.length; j++) {
+      d = rows[j].d;
+      if (slIdx < 0 && (long ? d[2] <= sl : d[1] >= sl)) slIdx = j;
+      if (tpIdx < 0 && (long ? d[1] >= t1 : d[2] <= t1)) tpIdx = j;
+    }
+    out.slIdx = slIdx; out.tpIdx = tpIdx;
+    out.first = slIdx >= 0 && tpIdx >= 0 ? (slIdx < tpIdx ? 'sl' : tpIdx < slIdx ? 'tp' : 'both') : slIdx >= 0 ? 'sl' : tpIdx >= 0 ? 'tp' : 'none';
+    var endIdx = slIdx >= 0 ? slIdx : rows.length - 1, mfe = 0, mae = 0;
+    for (j = out.i0; j <= endIdx; j++) { d = rows[j].d; var fav = long ? d[1] - e : e - d[2]; if (fav > mfe) mfe = fav; }
+    var maeEnd = tpIdx >= 0 ? Math.min(tpIdx, endIdx) : endIdx;
+    for (j = out.i0; j <= maeEnd; j++) { d = rows[j].d; var adv = long ? e - d[2] : d[1] - e; if (adv > mae) mae = adv; }
+    out.mfe = mfe; out.mae = mae; out.mfeR = mfe / risk; out.maeR = mae / risk; out.mfePct = mfe / e * 100; out.maePct = mae / e * 100;
+    var recovered = false;
+    if (out.first === 'sl') for (j = slIdx + 1; j < rows.length; j++) { if (long ? rows[j].d[1] >= t1 : rows[j].d[2] <= t1) { recovered = true; break; } }
+    if (out.first === 'both') out.hints.push('止损和 TP1 出现在同一根K线内，当前周期太粗，无法判断谁先发生。');
+    if (out.first === 'tp' && out.maeR >= 0.8) out.hints.push('到达 TP1 之前，最大回撤已有 ' + out.maeR.toFixed(2) + 'R，离止损只差一点，止损可能偏紧。');
+    if (out.first === 'sl' && recovered) out.hints.push('触发止损后，价格又到过 TP1。进场偏早，或止损偏紧。');
+    if (out.first === 'sl' && out.mfeR >= 1) out.hints.push('止损之前曾浮盈 ' + out.mfeR.toFixed(2) + 'R，可以考虑分批止盈，或把止损上移到保本。');
+    if (out.first === 'sl' && !recovered && out.mfeR < 0.5) out.hints.push('进场后几乎没有顺势空间就走到止损，可能是方向判断问题，而不是止损位置问题。');
+    if (out.first === 'none') out.hints.push('截至目前既没触及 TP1，也没触及止损。最大浮盈 ' + out.mfeR.toFixed(2) + 'R，最大回撤 ' + out.maeR.toFixed(2) + 'R。');
+    if (out.first === 'tp' && out.maeR < 0.4) out.hints.push('到达 TP1 之前回撤很小，进场位置比较理想。');
+    if (!out.hints.length) out.hints.push('这一单的结果在正常范围内，没有明显的止损或进场问题。');
+    return out;
+  }
+  function reviewItem(it) {
+    var c = it.card, sym = normSymbol(c.symbol), start = parseTs(c.ts), now = Date.now();
+    if (!sym || !isFinite(start)) { toast('这一单缺少交易对或生成时间，无法复盘。'); return; }
+    var el = now - start; if (el < 10 * 60000) { toast('这一单刚生成，等价格走一段时间再复盘。'); return; }
+    var iv = el < 6 * 3600e3 ? '5m' : el < 26 * 3600e3 ? '15m' : el < 4 * 86400e3 ? '1h' : el < 20 * 86400e3 ? '4h' : '1d', mk = (c.kl && c.kl.mk) || S.market;
+    toast('正在拉取 ' + sym + ' 自 ' + c.ts + ' 以来的 ' + iv + ' K线…');
+    Binance.klinesFrom(sym, iv, start, 200, mk).then(function (rows) {
+      if (rows.length < 3) throw new Error('这段时间的K线太少');
+      var an = analyseTrade(c, rows); if (an.err) { toast(an.err); return; }
+      return ensureFonts(c).then(function () {
+        renderReview(off, c, rows, an, iv, mk);
+        var head = an.first === 'unfilled' ? '未触发进场' : an.first === 'tp' ? '先触及 TP1' : an.first === 'sl' ? '先触及止损' : an.first === 'both' ? '同一根K线内触及，无法判断先后' : '仍在进行';
+        showSheet(off.toDataURL('image/png'), '复盘结果：' + head + (an.mfeR !== undefined ? ' · 最大浮盈 ' + an.mfeR.toFixed(2) + 'R · 最大回撤 ' + an.maeR.toFixed(2) + 'R' : '') + '。按K线高低点推算，不含滑点。');
+        toast('');
+      });
+    }).catch(function (e) { toast('复盘失败：' + Binance.explain(e)); });
+  }
+  function renderReview(c, card, rows, an, iv, mk) {
+    var s = clone(card); s.canvasSize = 'auto'; var C = colors(s), T = C.T, W = 1080, P0 = P, fullW = W - 2 * P0;
+    ctx = mctx; ctx.font = '400 26px ' + UI;
+    var hintLines = []; an.hints.slice(0, 3).forEach(function (h) { hintLines = hintLines.concat(wrapText('· ' + h, fullW - 36, 3)); });
+    var hintH = hintLines.length * 36 + 36, footH = footerHeight(s, fullW), statsH = an.mfe !== undefined ? 150 : 0;
+    var H = headerH() + 560 + 22 + 96 + 22 + statsH + (statsH ? 22 : 0) + hintH + 22 + footH + 70;
+    function headerH() { return 140 + 216; }
+    c.width = W; c.height = H; ctx = c.getContext('2d'); ctx.fillStyle = T.bg; ctx.fillRect(0, 0, W, H); ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
+    var rs = clone(s); rs.result = 'pending'; rs.draftSrc = ''; rs.ts = fmtT(Date.now()); rs.showTime = true;
+    drawHeader(rs, C, P0, 0, fullW); drawSymbol(rs, C, P0, 140, fullW);
+    var y = 356, ents = entryList(s), tps = usedTps(s).map(entryBounds), slv = num(s.sl);
+    var markers = [];
+    if (an.i0 >= 0) markers.push({ i: an.i0, price: an.e, color: T.ink === '#000000' ? '#000' : T.ink, text: '进场', up: C.long ? false : true });
+    if (an.tpIdx >= 0) markers.push({ i: an.tpIdx, price: an.t1, color: C.tpC, text: 'TP1', up: C.long });
+    if (an.slIdx >= 0) markers.push({ i: an.slIdx, price: an.sl, color: C.slC, text: '止损', up: !C.long });
+    drawChart(s, C, tps, ents, slv, { x: P0, y: y, w: fullW, h: 560 }, { d: rows.map(function (r) { return r.d; }), iv: iv, mk: mk, sym: normSymbol(s.symbol) }, { levels: true, markers: markers });
+    y += 560 + 22;
+    var head = an.first === 'unfilled' ? '计划没有触发进场' : an.first === 'tp' ? '先触及 TP1' : an.first === 'sl' ? '先触及止损' : an.first === 'both' ? '止损与 TP1 同一根K线内触及' : '尚未触及止盈止损';
+    var col = an.first === 'tp' ? C.tpC : an.first === 'sl' ? C.slC : T.ink;
+    panel(P0, y, fullW, 96, 18, T); ctx.fillStyle = T.muted; ctx.font = '500 22px ' + UI; ctx.fillText('复盘 · 计划时间 ' + (card.ts || '') + ' 至 ' + fmtT(rows[rows.length - 1].t), P0 + 24, y + 36);
+    ctx.fillStyle = col; ctx.font = '700 36px ' + UI; ctx.fillText(head, P0 + 24, y + 78); y += 96 + 22;
+    if (statsH) {
+      panel(P0, y, fullW, statsH - 0, 18, T);
+      var cells = [['最大浮盈', '+' + an.mfePct.toFixed(2) + '%  ·  ' + an.mfeR.toFixed(2) + 'R', C.tpC], ['止盈前最大回撤', '−' + an.maePct.toFixed(2) + '%  ·  ' + an.maeR.toFixed(2) + 'R', C.slC], ['进场时间', an.i0 >= 0 ? fmtT(rows[an.i0].t) : '—', T.ink]];
+      cells.forEach(function (k, i) { var cx = P0 + fullW / 6 + i * fullW / 3; ctx.textAlign = 'center'; ctx.fillStyle = T.muted; ctx.font = '500 21px ' + UI; ctx.fillText(k[0], cx, y + 50); ctx.fillStyle = k[2]; fitFont(k[1], 700, 30, NUM, fullW / 3 - 24, 18); ctx.fillText(k[1], cx, y + 104); });
+      ctx.textAlign = 'left'; y += statsH + 22;
+    }
+    panel(P0, y, fullW, hintH, 18, T); ctx.fillStyle = T.ink; ctx.font = '400 26px ' + UI; hintLines.forEach(function (ln, i) { ctx.fillText(ln, P0 + 18, y + 40 + i * 36); }); y += hintH + 22;
+    var fs = clone(s); fs.disclaimer = (s.lang === 'en' ? 'Review is computed from candle highs/lows and ignores slippage. Not investment advice.' : '复盘按K线高低点推算，不含滑点和手续费，仅供参考，不构成投资建议。'); fs.stampId = '';
+    drawFooter(fs, C, P0, y + 4, fullW); drawWatermark(C, W, H);
+  }
+
+  /* ================= track-record card & "today's plans" board ================= */
+  function periodStart(kind) {
+    var d = new Date(); d.setHours(0, 0, 0, 0);
+    if (kind === 'week') { var wd = (d.getDay() + 6) % 7; d.setDate(d.getDate() - wd); return d.getTime(); }
+    if (kind === 'month') { d.setDate(1); return d.getTime(); }
+    if (kind === '30d') return Date.now() - 30 * 86400e3;
+    return 0;
+  }
+  function renderSummary(c, list, label) {
+    var s = clone(S); s.canvasSize = 'auto'; s.stampId = ''; var C = colors(s), T = C.T, W = 1080, fullW = W - 2 * P, st = calcStats(list);
+    ctx = mctx; var footH = footerHeight(s, fullW), rowsN = Math.min(8, list.length);
+    var H = 140 + 150 + 2 * 128 + 22 + 22 + 360 + 22 + (rowsN ? 56 + rowsN * 70 : 0) + 30 + 70 + footH + 70;
+    c.width = W; c.height = H; ctx = c.getContext('2d'); ctx.fillStyle = T.bg; ctx.fillRect(0, 0, W, H); ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
+    var hs = clone(s); hs.ts = stamp(); hs.showTime = true; drawHeader(hs, C, P, 0, fullW);
+    ctx.fillStyle = T.ink; ctx.font = '700 64px ' + UI; ctx.fillText(L(s, 'sum'), P, 140 + 76);
+    ctx.fillStyle = T.muted; ctx.font = '500 28px ' + UI; ctx.fillText(label + ' · ' + st.n + (s.lang === 'en' ? ' plans' : ' 单'), P, 140 + 122);
+    var y = 290, tw = (fullW - 2 * 18) / 3;
+    var pos = function (v) { return v >= 0 ? C.UPC : C.DNC; };
+    var tiles = [
+      ['胜率', st.winRate === null ? '—' : st.winRate.toFixed(0) + '%', T.ink], ['盈 / 亏 / 保本', st.w + ' / ' + st.l + ' / ' + st.b, T.ink], ['计划盈亏比均值', st.avgRR === null ? '—' : '1 : ' + st.avgRR.toFixed(2), T.ink],
+      ['累计净收益', st.realN ? (st.netSum >= 0 ? '+' : '') + st.netSum.toFixed(2) + '%' : '—', st.realN ? pos(st.netSum) : T.ink], ['平均 R', st.avgR === null ? '—' : st.avgR.toFixed(2) + ' R', st.avgR === null ? T.ink : pos(st.avgR)], ['最大回撤', st.realN ? st.maxDD.toFixed(2) + '%' : '—', st.realN && st.maxDD > 0 ? C.DNC : T.ink]
+    ];
+    tiles.forEach(function (k, i) {
+      var x = P + (i % 3) * (tw + 18), yy = y + Math.floor(i / 3) * (128 + 22);
+      panel(x, yy, tw, 128, 18, T); ctx.fillStyle = T.muted; ctx.font = '500 21px ' + UI; ctx.fillText(k[0], x + 22, yy + 40);
+      ctx.fillStyle = k[2]; fitFont(k[1], 700, 40, NUM, tw - 40, 20); ctx.fillText(k[1], x + 22, yy + 96);
+    });
+    y += 2 * 128 + 22 + 22;
+    // equity curve
+    panel(P, y, fullW, 360, 18, T);
+    ctx.fillStyle = T.muted; ctx.font = '500 21px ' + UI; ctx.fillText('累计净收益曲线（已录入分批平仓的交易）', P + 22, y + 38);
+    var cx0 = P + 90, cx1 = P + fullW - 30, cy0 = y + 70, cy1 = y + 320;
+    if (st.curve.length >= 2) {
+      var vals = [0].concat(st.curve.map(function (p) { return p.v; })), mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals), pd = (mx - mn) * 0.15 || 1; mn -= pd; mx += pd;
+      var X = function (i) { return cx0 + (cx1 - cx0) * i / (vals.length - 1); }, Yv = function (v) { return cy1 - (v - mn) / (mx - mn) * (cy1 - cy0); };
+      ctx.strokeStyle = T.line; ctx.lineWidth = 1;
+      for (var g = 0; g <= 3; g++) { var gv = mn + (mx - mn) * g / 3, gy = Yv(gv); ctx.beginPath(); ctx.moveTo(cx0, gy); ctx.lineTo(cx1, gy); ctx.stroke(); ctx.fillStyle = T.muted; ctx.font = '500 15px ' + NUM; ctx.textAlign = 'right'; ctx.fillText(gv.toFixed(1) + '%', cx0 - 10, gy + 5); ctx.textAlign = 'left'; }
+      ctx.strokeStyle = T.muted; ctx.setLineDash([6, 6]); ctx.beginPath(); ctx.moveTo(cx0, Yv(0)); ctx.lineTo(cx1, Yv(0)); ctx.stroke(); ctx.setLineDash([]);
+      var endCol = vals[vals.length - 1] >= 0 ? C.UPC : C.DNC;
+      ctx.globalAlpha = .12; ctx.fillStyle = endCol; ctx.beginPath(); ctx.moveTo(X(0), Yv(0)); vals.forEach(function (v, i) { ctx.lineTo(X(i), Yv(v)); }); ctx.lineTo(X(vals.length - 1), Yv(0)); ctx.closePath(); ctx.fill(); ctx.globalAlpha = 1;
+      ctx.strokeStyle = endCol; ctx.lineWidth = 4; ctx.lineJoin = 'round'; ctx.beginPath(); vals.forEach(function (v, i) { if (i) ctx.lineTo(X(i), Yv(v)); else ctx.moveTo(X(i), Yv(v)); }); ctx.stroke();
+      ctx.fillStyle = endCol; ctx.beginPath(); ctx.arc(X(vals.length - 1), Yv(vals[vals.length - 1]), 8, 0, 6.2832); ctx.fill();
+    } else { ctx.fillStyle = T.muted; ctx.font = '500 26px ' + UI; ctx.textAlign = 'center'; ctx.fillText('至少 2 单录入了分批平仓后显示曲线', P + fullW / 2, y + 200); ctx.textAlign = 'left'; }
+    y += 360 + 22;
+    if (rowsN) {
+      ctx.fillStyle = T.muted; ctx.font = '500 21px ' + UI; ctx.fillText('最近 ' + rowsN + ' 单', P, y + 30); y += 56;
+      list.slice(0, rowsN).forEach(function (it) {
+        var cd = it.card, re = realized(cd), r = cd.result || 'pending', rc = r === 'win' ? C.UPC : r === 'loss' ? C.DNC : T.muted;
+        ctx.fillStyle = T.line; ctx.fillRect(P, y, fullW, 2);
+        ctx.fillStyle = T.ink; ctx.font = '700 30px ' + NUM; ctx.fillText(cd.symbol || '—', P, y + 44);
+        ctx.fillStyle = cd.dir === 'long' ? colors(cd).UPC : colors(cd).DNC; ctx.font = '600 22px ' + UI; ctx.fillText(L(s, cd.dir === 'long' ? 'long' : 'short'), P + 250, y + 42);
+        ctx.fillStyle = T.muted; ctx.font = '500 20px ' + NUM; ctx.fillText((cd.ts || '').slice(5), P + 360, y + 42);
+        ctx.fillStyle = rc; ctx.font = '700 24px ' + UI; ctx.textAlign = 'right'; ctx.fillText(RESULT_LABEL[r] + (re ? '  ' + (re.net >= 0 ? '+' : '') + re.net.toFixed(2) + '%' : ''), P + fullW, y + 44); ctx.textAlign = 'left';
+        y += 70;
+      });
+    }
+    y += 26;
+    ctx.fillStyle = T.muted; ctx.font = '400 19px ' + UI;
+    wrapText('收益率按进场名义金额计算，不含杠杆放大；收益曲线只统计已录入分批平仓的 ' + st.realN + ' / ' + st.n + ' 单。结果均由本人在历史记录中标记。', fullW, 3).forEach(function (ln, i) { ctx.fillText(ln, P, y + 20 + i * 28); });
+    y += 90; drawFooter(s, C, P, y, fullW); drawWatermark(C, W, H);
+  }
+  $('btnSummary').addEventListener('click', function () {
+    var kind = $('sumPeriod').value, from = periodStart(kind), list = filtered().filter(function (it) { var t = parseTs(it.card.ts); return !isFinite(t) || t >= from; });
+    if (!list.length) { toast('这个时间范围内没有符合条件的记录。'); return; }
+    var label = ({ week: '本周', month: '本月', '30d': '近 30 天', all: '全部' })[kind] + (hf.tag ? ' · #' + hf.tag : '');
+    ensureFonts(S).then(function () { renderSummary(off, list, label); showSheet(off.toDataURL('image/png'), '战绩汇总：只用历史里你自己标记的结果和录入的平仓数据。'); });
+  });
+  function renderBoard(c, items) {
+    var s = clone(S); s.canvasSize = 'auto'; s.stampId = ''; var C = colors(s), T = C.T, W = 1080, fullW = W - 2 * P;
+    ctx = mctx; var footH = footerHeight(s, fullW), blockH = 250, H = 140 + 150 + items.length * (blockH + 20) + 30 + footH + 70;
+    c.width = W; c.height = H; ctx = c.getContext('2d'); ctx.fillStyle = T.bg; ctx.fillRect(0, 0, W, H); ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
+    var hs = clone(s); hs.ts = stamp(); hs.showTime = true; drawHeader(hs, C, P, 0, fullW);
+    ctx.fillStyle = T.ink; ctx.font = '700 60px ' + UI; ctx.fillText(L(s, 'board'), P, 140 + 74);
+    ctx.fillStyle = T.muted; ctx.font = '500 28px ' + UI; ctx.fillText(stamp().slice(0, 10) + ' · ' + items.length + (s.lang === 'en' ? ' plans' : ' 个计划'), P, 140 + 120);
+    var y = 290;
+    items.forEach(function (it) {
+      var cd = it.card, cc = colors(cd), A = analyse(cd), tps = usedTps(cd), ents = entryList(cd);
+      panel(P, y, fullW, blockH, 20, T);
+      ctx.fillStyle = T.ink; ctx.font = '700 46px ' + NUM; ctx.fillText(cd.symbol || '—', P + 28, y + 62);
+      var sw = ctx.measureText(cd.symbol || '—').width;
+      ctx.fillStyle = cc.dirC; rr(P + 28 + sw + 20, y + 28, 100, 44, 12); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = '700 24px ' + UI; ctx.textAlign = 'center'; ctx.fillText(L(cd, cd.dir === 'long' ? 'long' : 'short'), P + 28 + sw + 70, y + 60); ctx.textAlign = 'left';
+      if (cd.result && cd.result !== 'pending') { var rc = cd.result === 'win' ? cc.UPC : cd.result === 'loss' ? cc.DNC : T.muted; ctx.fillStyle = rc; ctx.font = '700 24px ' + UI; ctx.textAlign = 'right'; ctx.fillText(L(cd, cd.result), P + fullW - 28, y + 58); ctx.textAlign = 'left'; }
+      var colw = (fullW - 56) / 2, kv = [[L(cd, 'entry'), ents.map(function (e) { return rangeText(e.lo, e.hi); }).join('  /  '), T.ink], [L(cd, 'sl'), cd.sl || '—', cc.slC], [L(cd, 'tp'), tps.map(function (t) { return rangeText(t.lo, t.hi); }).join('  →  '), cc.tpC], [L(cd, 'rr') + ' · ' + L(cd, 'size'), (A.ok ? '1:' + A.rr.toFixed(2) : '—') + '  ·  ' + ((cd.size || '').trim() || '—'), T.ink]];
+      kv.forEach(function (k, i) {
+        var x = P + 28 + (i % 2) * colw, yy = y + 110 + Math.floor(i / 2) * 64;
+        ctx.fillStyle = T.muted; ctx.font = '500 19px ' + UI; ctx.fillText(k[0], x, yy); ctx.fillStyle = k[2]; fitFont(k[1], 700, 28, NUM, colw - 24, 16); ctx.fillText(k[1], x, yy + 34);
+      });
+      if ((cd.trigger || '').trim()) { ctx.fillStyle = T.accent; ctx.font = '500 19px ' + UI; ctx.fillText(wrapText(L(cd, 'trig') + '：' + cd.trigger.trim(), fullW - 56, 1)[0], P + 28, y + blockH - 16); }
+      y += blockH + 20;
+    });
+    var bs = clone(s); drawFooter(bs, C, P, y + 10, fullW); drawWatermark(C, W, H);
+  }
+  function todayStr() { return stamp().slice(0, 10); }
+  $('btnToday').addEventListener('click', function () {
+    var t = todayStr(), n = 0; hist.forEach(function (it) { var m = (it.card.ts || '').slice(0, 10) === t; sel[it.id] = m; if (m) n++; });
+    renderHist(); toast(n ? '已选中今天的 ' + n + ' 单。' : '今天还没有保存过交易单。');
+  });
+  $('btnBoard').addEventListener('click', function () {
+    var items = hist.filter(function (it) { return sel[it.id]; });
+    if (!items.length) { toast('先在历史列表里勾选要合成的交易单，或点“选中今天”。'); return; }
+    if (items.length > 8) { toast('一张长图最多放 8 单，请减少选择。'); return; }
+    items.sort(function (a, b) { return String(a.card.ts || '').localeCompare(String(b.card.ts || '')); });
+    ensureFonts(S).then(function () { return Promise.all(items.map(function (it) { return ensureFonts(it.card); })); }).then(function () { renderBoard(off, items); showSheet(off.toDataURL('image/png'), '今日计划长图（' + items.length + ' 单）。手机长按图片保存。'); });
+  });
+
+
+  /* ================= Binance actions ================= */
   function say(msg) { $('bstat').textContent = msg; }
   function fillLevels(p, dir) {
     var k = dir === 'long' ? 1 : -1;
-    S.entryLo = fmt(p * 0.9975); S.entryHi = fmt(p * 1.0025);
+    pushUndo();
+    S.entryLo = fmt(p * 0.9975); S.entryHi = fmt(p * 1.0025); S.entryPct = ''; S.ents = [];
     S.tps = [{ lo: fmt(p * (1 + 0.03 * k)), hi: fmt(p * (1 + 0.045 * k)) }];
-    S.sl = fmt(p * (1 - 0.025 * k));
+    S.sl = fmt(p * (1 - 0.025 * k)); S.draftSrc = '';
     syncForm();
   }
   $('btnPrice').addEventListener('click', function () {
@@ -1153,26 +1854,27 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
     say('正在获取 ' + sym + ' 现价…');
     Binance.ticker(sym).then(function (t) {
       lastTicker = t; fillLevels(t.price, S.dir);
-      say(sym + ' 现价 ' + fmt(t.price) + '。已按现价生成示例点位，请按你的计划修改。');
+      say(sym + ' 现价 ' + fmt(t.price) + '。已按现价生成示例点位（可点“撤销”），请按你的计划修改。');
     }).catch(function (e) { say('获取失败：' + Binance.explain(e)); });
   });
   $('btnKl').addEventListener('click', function () {
     var sym = normSymbol(S.symbol);
     if (!sym) { say('先填写交易对，例如 ETHUSDT。'); return; }
     say('正在加载 ' + sym + ' ' + S.bnIv + ' K线…');
-    Promise.all([Binance.klines(sym, S.bnIv, 60), Binance.klines(sym, '1h', 60), Binance.ticker(sym).catch(function () { return null; })]).then(function (r) {
-      S.kl = { sym: sym, iv: S.bnIv, mk: S.market, d: r[0] }; S.klTrend = { sym:sym, iv:'1h', mk:S.market, d:r[1] }; S.showChart = true; $('showChart').checked = true; if (r[2]) lastTicker = r[2];
-      save(); schedule(); say('已加载 ' + S.bnIv + ' 短线图与 1 小时趋势参考。');
+    Promise.all([Binance.klines(sym, S.bnIv, 60), Binance.klines(sym, '1h', 60), Binance.ticker(sym).catch(function () { return null; }), Binance.extra(sym).catch(function () { return null; })]).then(function (r) {
+      S.kl = { sym: sym, iv: S.bnIv, mk: S.market, d: r[0] }; S.klTrend = { sym: sym, iv: '1h', mk: S.market, d: r[1] };
+      S.extra = r[3] || null; S.showChart = true; $('showChart').checked = true; if (r[2]) lastTicker = r[2];
+      save(); schedule(); say('已加载 ' + S.bnIv + ' 短线图与 1 小时趋势参考' + (r[3] ? '，以及资金费率/持仓量/多空比。' : '。'));
     }).catch(function (e) { say('加载失败：' + Binance.explain(e)); });
   });
   Array.prototype.forEach.call(document.querySelectorAll('#hotCoins [data-symbol]'), function (b) {
-    b.setAttribute('aria-pressed', String(b.getAttribute('data-symbol') === normSymbol(S.symbol)));
     b.addEventListener('click', function () {
-      S.symbol = b.getAttribute('data-symbol'); $('symbol').value = S.symbol; save();
-      Array.prototype.forEach.call(document.querySelectorAll('#hotCoins [data-symbol]'), function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+      S.symbol = b.getAttribute('data-symbol'); $('symbol').value = S.symbol; save(); markCoins();
       $('btnKl').click();
     });
   });
+
+  /* ---- live price + alerts ---- */
   var tickerBusy = false;
   function tick() {
     if (document.hidden || tickerBusy) return;
@@ -1180,36 +1882,230 @@ input[type=text]:focus,textarea:focus,select:focus { background:white; border-co
     tickerBusy = true;
     Binance.ticker(sym).then(function (t) {
       if (sym !== normSymbol(S.symbol)) return;
-      lastTicker = t; renderLive(t);
-    }).catch(function (e) { say('实时刷新失败：' + Binance.explain(e)); }).then(function(){tickerBusy=false;});
+      lastTicker = t; renderLive(t); checkAlerts(t.price);
+    }).catch(function (e) { say('实时刷新失败：' + Binance.explain(e)); }).then(function () { tickerBusy = false; });
   }
   $('liveOn').addEventListener('change', function () {
     clearInterval(liveTimer); liveTimer = null;
-    if (this.checked) { tick(); liveTimer = setInterval(tick, 1000); } 
+    if (this.checked) { tick(); liveTimer = setInterval(tick, 1000); }
   });
+
+  var alertState = { sig: '', fired: {} }, alertQueue = [];
+  function planSig() { return JSON.stringify([normSymbol(S.symbol), S.dir, entryList(S).map(entryBounds), S.sl, usedTps(S).map(function (t) { return [t.lo, t.hi]; })]); }
+  function raiseAlert(a) {
+    alertQueue.push(a); if (alertQueue.length > 5) alertQueue.shift();
+    renderAlerts();
+    try { if (window.Notification && Notification.permission === 'granted') new Notification(a.title, { body: a.body }); } catch (e) {}
+  }
+  function setResultTo(r, text) {
+    pushUndo(); S.result = r; if (text && !S.resultText) { S.resultText = text; $('resultText').value = text; }
+    segPaint.forEach(function (p) { p(); }); save(); schedule();
+    toast('已把本单标记为' + RESULT_LABEL[r] + '。');
+  }
+  function renderAlerts() {
+    var bar = $('alertBar'); bar.textContent = '';
+    if (!alertQueue.length) { bar.hidden = true; return; }
+    bar.hidden = false;
+    alertQueue.forEach(function (a, i) {
+      var row = document.createElement('div'); row.className = 'alert-row ' + a.kind;
+      var tx = document.createElement('span'); tx.textContent = a.title + ' · ' + a.body; row.appendChild(tx);
+      function btn(label, fn) { var b = document.createElement('button'); b.type = 'button'; b.textContent = label; b.addEventListener('click', function () { fn(); alertQueue.splice(alertQueue.indexOf(a), 1); renderAlerts(); }); row.appendChild(b); }
+      if (a.kind === 'tp') btn('标记为盈利', function () { setResultTo('win'); });
+      if (a.kind === 'sl') btn('标记为亏损', function () { setResultTo('loss'); });
+      btn('忽略', function () {});
+      bar.appendChild(row);
+    });
+  }
+  function checkAlerts(p) {
+    if (!$('alertOn').checked || !isFinite(p)) return;
+    var sig = planSig(); if (sig !== alertState.sig) { alertState = { sig: sig, fired: {} }; }
+    var long = S.dir === 'long', sym = normSymbol(S.symbol), f = alertState.fired;
+    function once(key, kind, title, body) { if (f[key]) return; f[key] = true; raiseAlert({ kind: kind, title: sym + ' ' + title, body: body + '（现价 ' + fmt(p) + '）' }); }
+    var zs = entryList(S).map(entryBounds);
+    if (zs.some(function (z) { return p >= z[0] && p <= z[1]; })) once('entry', 'entry', '进入进场区间', '请按计划确认是否开仓');
+    var sl = num(S.sl); if (isFinite(sl) && (long ? p <= sl : p >= sl)) once('sl', 'sl', '触及止损位', '止损 ' + fmt(sl));
+    usedTps(S).forEach(function (t, i) { var v = isFinite(num(t.lo)) ? num(t.lo) : num(t.hi); if (isFinite(v) && (long ? p >= v : p <= v)) once('tp' + i, 'tp', '到达 TP' + (i + 1), '止盈 ' + fmt(v)); });
+  }
+  $('btnNotify').addEventListener('click', function () {
+    if (!window.Notification) { toast('这个浏览器不支持桌面通知，页面内横幅仍会提醒。'); return; }
+    Notification.requestPermission().then(function (r) { toast(r === 'granted' ? '已开启桌面通知（页面需保持打开）。' : '通知未开启，页面内横幅仍会提醒。'); });
+  });
+
+  /* ---- positions / fills from your own backend ---- */
   $('btnPos').addEventListener('click', function () {
     var box = $('posList'); box.textContent = '';
     say('正在读取持仓…');
-    Binance.positions().then(function (list) {
+    backend('/positions').then(function (r) {
+      var list = Array.isArray(r) ? r : (r && r.positions);
+      if (!Array.isArray(list) || list.length > 200) throw new Error('后端返回的持仓格式不对');
+      list = list.filter(function (p) { return p && typeof p.symbol === 'string' && /^[A-Z0-9]{3,30}$/.test(p.symbol) && isFinite(parseFloat(p.positionAmt)) && parseFloat(p.positionAmt) !== 0; });
       if (!list.length) { say('没有持仓。'); return; }
-      say('点击一个持仓填入交易单。');
+      say('点击一个持仓填入交易单（只填交易对、方向、杠杆和进场价，止盈止损请自己定）。');
       list.forEach(function (p) {
         var b = document.createElement('button'); b.type = 'button';
-        var amt = parseFloat(p.positionAmt), dir = amt > 0 ? 'long' : 'short';
-        b.textContent = p.symbol + ' ' + (dir === 'long' ? '多' : '空') + (p.leverage ? ' ' + p.leverage + 'x' : '');
+        var dir = parseFloat(p.positionAmt) > 0 ? 'long' : 'short', lv = parseFloat(p.leverage);
+        b.textContent = p.symbol + ' ' + (dir === 'long' ? '多' : '空') + (lv > 0 ? ' ' + lv + 'x' : '');
         b.addEventListener('click', function () {
-          S.symbol = p.symbol; S.dir = dir; if (p.leverage) S.size = p.leverage + 'x';
+          pushUndo(); S.symbol = p.symbol; S.dir = dir; S.lev = lv > 0 && lv <= 200 ? String(lv) : S.lev; S.ents = []; S.entryPct = '';
           var ep = parseFloat(p.entryPrice);
-          if (isFinite(ep)) fillLevels(ep, dir); else syncForm();
+          if (isFinite(ep) && ep > 0) { S.entryLo = fmt(ep); S.entryHi = ''; }
+          S.draftSrc = ''; syncForm();
         });
         box.appendChild(b);
       });
     }).catch(function (e) { say('读取失败：' + (e && e.message ? e.message : '网络请求被拒绝')); });
   });
+  $('btnFills').addEventListener('click', function () {
+    var sym = normSymbol(S.symbol); if (!sym) { say('先填写交易对。'); return; }
+    var since = parseTs(S.ts); if (!isFinite(since)) since = Date.now() - 7 * 864e5;
+    say('正在读取 ' + sym + ' 成交记录…');
+    backend('/fills?symbol=' + encodeURIComponent(sym) + '&since=' + Math.floor(since)).then(function (r) {
+      var list = r && r.fills; if (!Array.isArray(list) || list.length > 1000) throw new Error('后端返回的成交格式不对');
+      var inSide = S.dir === 'long' ? 'BUY' : 'SELL', opened = 0, closes = {}, order = [];
+      list.forEach(function (x) {
+        var q = parseFloat(x && x.qty), p = parseFloat(x && x.price); if (!(q > 0) || !(p > 0)) return;
+        if (x.side === inSide) opened += q;
+        else if (x.side === 'BUY' || x.side === 'SELL') { var k = String(p); if (!closes[k]) { closes[k] = { p: p, q: 0 }; order.push(k); } closes[k].q += q; }
+      });
+      if (!(opened > 0) || !order.length) throw new Error('没找到这个方向的开仓或平仓成交');
+      var exits = order.slice(0, 20).map(function (k) { return { pct: (closes[k].q / opened * 100).toFixed(2), price: fmt(closes[k].p), be: false }; });
+      var tot = exits.reduce(function (a, x) { return a + parseFloat(x.pct); }, 0);
+      if (tot > 100.5) throw new Error('平仓数量超过开仓数量（' + tot.toFixed(1) + '%），可能含有更早的仓位，请手动填写');
+      pushUndo(); S.exits = exits; buildExits(); save(); schedule();
+      say('已导入 ' + exits.length + ' 笔平仓，合计 ' + tot.toFixed(2) + '%；请核对后再保存。');
+    }).catch(function (e) { say('导入失败：' + (e && e.message ? e.message : '网络请求被拒绝')); });
+  });
 
-  buildTps(); buildExits(); renderHist(); schedule();
+  /* ---- rule-based draft (ATR / swing / EMA) — a starting point, never a signal ---- */
+  function atrOf(c, n) {
+    var trs = []; for (var i = 1; i < c.length; i++) trs.push(Math.max(c[i][1] - c[i][2], Math.abs(c[i][1] - c[i - 1][3]), Math.abs(c[i][2] - c[i - 1][3])));
+    trs = trs.slice(-n); return trs.length ? trs.reduce(function (a, b) { return a + b; }, 0) / trs.length : NaN;
+  }
+  function emaOf(v, n) { var k = 2 / (n + 1), e = v[0]; for (var i = 1; i < v.length; i++) e = v[i] * k + e * (1 - k); return e; }
+  function ruleDraft(short, hour) {
+    var p = short[short.length - 1][3], a = atrOf(short, 14); if (!isFinite(a) || !(a > 0)) return null;
+    var closes = hour.map(function (c) { return c[3]; }), e20 = emaOf(closes, 20), e50 = emaOf(closes, 50), dir = e20 >= e50 ? 'long' : 'short', long = dir === 'long';
+    var w = short.slice(-20), swing = long ? Math.min.apply(null, w.map(function (c) { return c[2]; })) : Math.max.apply(null, w.map(function (c) { return c[1]; }));
+    var lo = long ? p - 0.4 * a : p, hi = long ? p : p + 0.4 * a, avg = (lo + hi) / 2;
+    var sl = long ? Math.min(swing - 0.1 * a, avg - a) : Math.max(swing + 0.1 * a, avg + a), R = Math.abs(avg - sl), k = long ? 1 : -1;
+    return { dir: dir, p: p, atr: a, e20: e20, e50: e50, swing: swing, entryLo: lo, entryHi: hi, sl: sl, R: R, tps: [avg + k * 1.5 * R, avg + k * 2.5 * R] };
+  }
+  function showSuggest(title, rows, warn, apply) {
+    var box = $('suggestOut'); box.textContent = ''; box.hidden = false;
+    var h = document.createElement('div'); h.className = 'sg-title'; h.textContent = title; box.appendChild(h);
+    rows.forEach(function (r) { var d = document.createElement('div'); d.className = 'kv'; var a = document.createElement('span'); a.textContent = r[0]; var b = document.createElement('b'); b.textContent = r[1]; d.appendChild(a); d.appendChild(b); box.appendChild(d); });
+    if (warn) { var w = document.createElement('div'); w.className = 'calc-hint'; w.textContent = warn; box.appendChild(w); }
+    if (apply) { var bt = document.createElement('button'); bt.type = 'button'; bt.className = 'btn ghost small'; bt.textContent = '采用这组点位（可撤销）'; bt.addEventListener('click', function () { apply(); box.hidden = true; }); box.appendChild(bt); }
+  }
+  function loadCandles() {
+    var sym = normSymbol(S.symbol); if (!sym) return Promise.reject(new Error('先填写交易对'));
+    return Promise.all([Binance.klines(sym, S.bnIv, 100), Binance.klines(sym, '1h', 100), Binance.extra(sym).catch(function () { return null; })]).then(function (r) {
+      if (r[0].length < 30 || r[1].length < 50) throw new Error('K线数量不够');
+      return { sym: sym, short: r[0], hour: r[1], extra: r[2] };
+    });
+  }
+  $('btnSuggest').addEventListener('click', function () {
+    say('正在计算规则草稿…');
+    loadCandles().then(function (c) {
+      var d = ruleDraft(c.short, c.hour); if (!d) throw new Error('波动数据不足');
+      say('规则草稿已生成，请核对后再采用。');
+      var cmp = d.dir === S.dir ? '' : '注意：1 小时趋势方向与当前所选方向相反。';
+      showSuggest('规则草稿 · ' + c.sym, [
+        ['1 小时趋势', (d.dir === 'long' ? 'EMA20 > EMA50，偏多' : 'EMA20 < EMA50，偏空')], ['ATR(14) ' + S.bnIv, fmt(d.atr)], ['20 根波段' + (d.dir === 'long' ? '低点' : '高点'), fmt(d.swing)],
+        ['进场区间', fmt(Math.min(d.entryLo, d.entryHi)) + ' – ' + fmt(Math.max(d.entryLo, d.entryHi))], ['止损', fmt(d.sl)], ['TP1 (1.5R)', fmt(d.tps[0])], ['TP2 (2.5R)', fmt(d.tps[1])]
+      ], (cmp ? cmp + ' ' : '') + '这是按波动率和近期高低点机械算出的草稿，不是买卖建议；请结合自己的判断修改。', function () {
+        pushUndo(); S.dir = d.dir; S.entryLo = fmt(Math.min(d.entryLo, d.entryHi)); S.entryHi = fmt(Math.max(d.entryLo, d.entryHi)); S.entryPct = ''; S.ents = []; S.sl = fmt(d.sl);
+        S.tps = d.tps.map(function (v) { return { lo: fmt(v), hi: '' }; }); S.draftSrc = 'rule'; S.showDraft = true; syncForm();
+      });
+    }).catch(function (e) { say('计算失败：' + (e && e.message ? e.message : Binance.explain(e))); });
+  });
+
+  /* ---- AI draft: your backend calls the model; you read it, edit it, and decide ---- */
+  $('btnAi').addEventListener('click', function () {
+    var btn = this; btn.disabled = true; say('正在请 AI 起草（可能要十几秒）…');
+    loadCandles().then(function (c) {
+      var d = ruleDraft(c.short, c.hour);
+      return backend('/ai/draft', { method: 'POST', timeout: 60000, body: {
+        symbol: c.sym, market: S.market, interval: S.bnIv, direction: S.dir, hint: String($('aiHint').value || '').slice(0, 300),
+        price: c.short[c.short.length - 1][3], candles: c.short.slice(-60), candles1h: c.hour.slice(-48), extra: c.extra, rule: d
+      } });
+    }).then(function (r) {
+      var x = r && r.draft; if (!x || typeof x !== 'object') throw new Error('后端返回的草稿格式不对');
+      var dir = x.dir === 'short' ? 'short' : x.dir === 'long' ? 'long' : null; if (!dir) throw new Error('草稿缺少方向');
+      var lo = num(x.entryLo), hi = num(x.entryHi), sl = num(x.sl);
+      var tps = (Array.isArray(x.tps) ? x.tps : []).slice(0, 3).map(function (t) { return { lo: num(t && t.lo), hi: num(t && t.hi) }; }).filter(function (t) { return isFinite(t.lo); });
+      if (!(lo > 0) || !(sl > 0) || !tps.length) throw new Error('草稿的点位不完整');
+      say('AI 草稿已生成。它可能出错，请逐项核对后再采用。');
+      var rows = [['方向', dir === 'long' ? '做多' : '做空'], ['进场区间', fmt(lo) + (hi > 0 ? ' – ' + fmt(hi) : '')], ['止损', fmt(sl)]];
+      tps.forEach(function (t, i) { rows.push(['TP' + (i + 1), fmt(t.lo) + (t.hi > 0 ? ' – ' + fmt(t.hi) : '')]); });
+      var why = cut(x.reason, 600);
+      showSuggest('AI 草稿 · ' + normSymbol(S.symbol), rows, (why ? why + '　' : '') + '以上内容由模型生成，不是投资建议，也不会自动发出。', function () {
+        pushUndo(); S.dir = dir; S.entryLo = fmt(lo); S.entryHi = hi > 0 ? fmt(hi) : ''; S.entryPct = ''; S.ents = []; S.sl = fmt(sl);
+        S.tps = tps.map(function (t) { return { lo: fmt(t.lo), hi: t.hi > 0 ? fmt(t.hi) : '' }; });
+        if (typeof x.size === 'string' && x.size.length <= 30) S.size = x.size;
+        if (typeof x.trigger === 'string') S.trigger = cut(x.trigger, 200);
+        if (typeof x.note === 'string' && x.note.trim()) S.note = cut(x.note, 400);
+        S.draftSrc = 'ai'; S.showDraft = true; syncForm();
+      });
+    }).catch(function (e) { say('AI 草稿失败：' + (e && e.message ? e.message : '网络请求被拒绝')); }).then(function () { btn.disabled = false; });
+  });
+
+  /* ================= brand / presets ================= */
+  $('logoFile').addEventListener('change', function () {
+    var f = this.files && this.files[0]; this.value = '';
+    if (!f) return;
+    if (['image/png', 'image/jpeg', 'image/webp'].indexOf(f.type) < 0 || f.size > 4 * 1024 * 1024) { toast('Logo 只支持 4MB 以内的 PNG / JPG / WebP。'); return; }
+    var url = URL.createObjectURL(f), img = new Image();
+    img.onload = function () {
+      var out = '';
+      [256, 160, 96].some(function (m) {
+        var sc = Math.min(1, m / Math.max(img.naturalWidth, img.naturalHeight)), c = document.createElement('canvas');
+        c.width = Math.max(1, Math.round(img.naturalWidth * sc)); c.height = Math.max(1, Math.round(img.naturalHeight * sc)); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        var u = c.toDataURL('image/png'); if (u.length < 200000) { out = u; return true; } return false;
+      });
+      URL.revokeObjectURL(url);
+      if (!out) { toast('这张图太复杂，压缩后仍然过大，请换一张简单的 Logo。'); return; }
+      S.logo = out; S.showLogo = true; $('showLogo').checked = true; save(); loadLogo(); toast('Logo 已设置。');
+    };
+    img.onerror = function () { URL.revokeObjectURL(url); toast('图片读取失败。'); };
+    img.src = url;
+  });
+  $('btnLogoClear').addEventListener('click', function () { S.logo = ''; save(); loadLogo(); schedule(); });
+  $('doStamp').addEventListener('change', function () { if (!this.checked) { S.stampId = ''; S.stampTs = ''; S.stampHash = ''; save(); schedule(); } });
+
+  var PRESET_KEYS = ['subtitle', 'dir', 'size', 'lev', 'tags', 'author', 'note', 'disclaimer', 'theme', 'redUp', 'lang', 'canvasSize', 'showMetrics', 'showTime', 'showChart', 'showLiq', 'showExtra', 'showDraft'];
+  var PRESET_SET = ['qrText', 'qrCaption', 'watermark', 'showLogo', 'showQr', 'showWm'];
+  function renderPresets() {
+    var sel = $('presetSel'); sel.textContent = '';
+    var o0 = document.createElement('option'); o0.value = ''; o0.textContent = Object.keys(presets).length ? '选择预设…' : '还没有预设'; sel.appendChild(o0);
+    Object.keys(presets).forEach(function (n) { var o = document.createElement('option'); o.value = n; o.textContent = n; sel.appendChild(o); });
+  }
+  $('btnPresetSave').addEventListener('click', function () {
+    var n = String($('presetName').value || '').trim().slice(0, 30); if (!n) { toast('先给预设起个名字。'); return; }
+    if (!presets[n] && Object.keys(presets).length >= 30) { toast('最多保存 30 个预设。'); return; }
+    var p = {}; PRESET_KEYS.concat(PRESET_SET).forEach(function (k) { p[k] = clone(S[k]); });
+    presets[n] = p; if (!savePresets()) { toast('浏览器存储已满，预设没有保存。'); return; }
+    renderPresets(); $('presetSel').value = n; toast('预设“' + n + '”已保存（不含点位和本金）。');
+  });
+  $('btnPresetApply').addEventListener('click', function () {
+    var n = $('presetSel').value, p = presets[n]; if (!p) { toast('先选择一个预设。'); return; }
+    var c = cleanCard(p, false), st = cleanSettings(p, {});
+    pushUndo();
+    PRESET_KEYS.forEach(function (k) { if (p[k] !== undefined) S[k] = clone(c[k]); });
+    PRESET_SET.forEach(function (k) { if (p[k] !== undefined) S[k] = st[k]; });
+    syncForm(); toast('已套用预设“' + n + '”。');
+  });
+  $('btnPresetDel').addEventListener('click', function () {
+    var n = $('presetSel').value; if (!presets[n]) return;
+    var old = presets[n]; delete presets[n]; savePresets(); renderPresets();
+    toast('已删除预设“' + n + '”。', '撤销', function () { presets[n] = old; savePresets(); renderPresets(); });
+  });
+
+  /* ================= init ================= */
+  buildTps(); buildEnts(); buildExits(); renderPresets(); loadLogo(); renderHist(); updateCalc(); markCoins(); schedule();
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { fontKey = ''; ensureFonts().then(draw); });
-  // thumbnails missing from older/imported items
   hist.forEach(function (it) { if (!it.thumb) makeThumb(it.card).then(function (th) { it.thumb = th; saveHist(); renderHist(); }); });
+  try { if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(function () {}); } catch (e) {}
 })();
+
 </script>
